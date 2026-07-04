@@ -9,6 +9,14 @@
 <img width="1857" height="887" alt="Captura de pantalla 2026-07-04 193951" src="https://github.com/user-attachments/assets/c1aa2406-144f-451f-bf54-d6d80eb3360e" />
 
 
+
+https://github.com/user-attachments/assets/49c11c4b-cbd7-48b3-8c75-f4edc6cafc86
+
+
+
+
+
+
 ## Features / Funcionalidades (Deezer‑first)
 
 - **Auth JWT + RBAC** (roles: `owner`, `editor`, `viewer`)
