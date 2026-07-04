@@ -14,7 +14,7 @@ def normalize_database_url(url: str) -> tuple[str, bool]:
     """Normalize provider DB URLs for SQLAlchemy+asyncpg.
 
     - Convert postgres/postgresql schemes to postgresql+asyncpg
-    - Remove libpq-only query params like `sslmode` (asyncpg will choke on them)
+    - Remove libpq-only query params like `sslmode` and `channel_binding` (asyncpg will choke on them)
     - Derive whether SSL is required from sslmode
     """
 
@@ -30,16 +30,20 @@ def normalize_database_url(url: str) -> tuple[str, bool]:
 
     params = parse_qsl(parts.query, keep_blank_values=True)
     sslmode: str | None = None
-    removed_sslmode = False
+    removed_any = False
     filtered: list[tuple[str, str]] = []
     for k, v in params:
-        if (k or "").lower() == "sslmode":
-            removed_sslmode = True
+        key = (k or "").lower()
+        if key == "sslmode":
+            removed_any = True
             sslmode = (v or "").lower()
+            continue
+        if key == "channel_binding":
+            removed_any = True
             continue
         filtered.append((k, v))
 
-    if not removed_sslmode:
+    if not removed_any:
         return url, False
 
     ssl_required = (sslmode or "") in _SSL_REQUIRED_MODES
