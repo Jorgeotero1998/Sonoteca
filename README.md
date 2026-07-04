@@ -5,6 +5,9 @@
 **ES**: Sonoteca es una biblioteca musical lista para portfolio para gestionar **canciones**, armar **playlists**, buscar/filtrar tu catálogo y ver **estadísticas**. Hecha como monorepo fullstack con **FastAPI** + **PostgreSQL** + **Alembic** + **auth JWT (RBAC)** y frontend **React (Vite)**. Pensada para deploy en **Render** (API + Postgres + Static Site).
 
 ---
+## Screenshot
+<img width="1857" height="887" alt="Captura de pantalla 2026-07-04 193951" src="https://github.com/user-attachments/assets/c1aa2406-144f-451f-bf54-d6d80eb3360e" />
+
 
 ## Features / Funcionalidades (Deezer‑first)
 
