@@ -9,6 +9,7 @@ from sqlalchemy import pool
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
 
+from app.core.config import normalize_database_url
 from app.core.db import Base
 from app.models import catalog, playlist, song, user  # noqa: F401
 
@@ -23,27 +24,23 @@ target_metadata = Base.metadata
 load_dotenv()
 
 
-def get_url() -> str:
-    url = (
-        os.getenv("DATABASE_URL", "")
+def get_url_and_ssl_required() -> tuple[str, bool]:
+    # Prefer NON_POOLING for migrations (PgBouncer transaction pooling can break DDL/migrations)
+    raw_url = (
+        os.getenv("POSTGRES_URL_NON_POOLING", "")
+        or os.getenv("DATABASE_URL", "")
         or os.getenv("POSTGRES_URL", "")
         or os.getenv("POSTGRES_PRISMA_URL", "")
-        or os.getenv("POSTGRES_URL_NON_POOLING", "")
     )
-    if not url:
-        raise RuntimeError("DATABASE_URL env var is required for migrations")
-    url = url.strip()
-    if url.startswith("postgresql+asyncpg://"):
-        return url
-    if url.startswith("postgres://"):
-        return url.replace("postgres://", "postgresql+asyncpg://", 1)
-    if url.startswith("postgresql://"):
-        return url.replace("postgresql://", "postgresql+asyncpg://", 1)
-    return url
+    if not raw_url:
+        raise RuntimeError(
+            "Database URL env var is required for migrations (POSTGRES_URL_NON_POOLING, DATABASE_URL, POSTGRES_URL, POSTGRES_PRISMA_URL)"
+        )
+    return normalize_database_url(raw_url)
 
 
 def run_migrations_offline() -> None:
-    url = get_url()
+    url, _ssl_required = get_url_and_ssl_required()
     context.configure(
         url=url,
         target_metadata=target_metadata,
@@ -69,13 +66,14 @@ def do_run_migrations(connection: Connection) -> None:
 
 async def run_migrations_online() -> None:
     configuration = config.get_section(config.config_ini_section) or {}
-    configuration["sqlalchemy.url"] = get_url()
+    url, ssl_required = get_url_and_ssl_required()
+    configuration["sqlalchemy.url"] = url
 
-    connectable = async_engine_from_config(
-        configuration,
-        prefix="sqlalchemy.",
-        poolclass=pool.NullPool,
-    )
+    engine_kwargs = {"prefix": "sqlalchemy.", "poolclass": pool.NullPool}
+    if ssl_required:
+        engine_kwargs["connect_args"] = {"ssl": True}
+
+    connectable = async_engine_from_config(configuration, **engine_kwargs)
 
     async with connectable.connect() as connection:
         await connection.run_sync(do_run_migrations)
