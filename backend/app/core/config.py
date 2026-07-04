@@ -10,11 +10,18 @@ class Settings(BaseSettings):
 
     database_url: str = "postgresql+asyncpg://postgres:postgres@localhost:5432/sonoteca"
 
-    jwt_secret: str = "change-me"
+    jwt_secret: str = "change-me-change-me-change-me-change-me"
     jwt_alg: str = "HS256"
     access_token_ttl_min: int = 60
 
     cors_origins: str = "http://localhost:5173"
+
+    # Catalog integrations (real music metadata / previews)
+    spotify_client_id: str = ""
+    spotify_client_secret: str = ""
+    deezer_base_url: str = "https://api.deezer.com"
+
+    catalog_cache_ttl_sec: int = 120
 
     @property
     def database_url_async(self) -> str:

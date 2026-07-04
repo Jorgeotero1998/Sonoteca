@@ -10,7 +10,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.deps import get_current_user, require_role
 from app.core.db import get_db
 from app.models.playlist import Playlist, PlaylistItem
-from app.models.song import Song
 from app.models.user import User
 from app.schemas.playlists import (
     PlaylistAddSongIn,
@@ -20,6 +19,7 @@ from app.schemas.playlists import (
     PlaylistReorderIn,
     PlaylistUpdate,
 )
+from app.services.catalog_hydrate import hydrate, parse_ref
 
 router = APIRouter(prefix="/playlists", tags=["playlists"])
 
@@ -30,7 +30,7 @@ async def list_playlists(
     user: User = Depends(get_current_user),
 ) -> List[Playlist]:
     res = await db.execute(
-        select(Playlist).where(Playlist.owner_id == user.id).order_by(Playlist.created_at.desc())
+        select(Playlist).where(Playlist.user_id == user.id).order_by(Playlist.created_at.desc())
     )
     return list(res.scalars().all())
 
@@ -41,7 +41,7 @@ async def create_playlist(
     db: AsyncSession = Depends(get_db),
     user: User = Depends(require_role("owner", "editor")),
 ) -> Playlist:
-    pl = Playlist(owner_id=user.id, **payload.model_dump())
+    pl = Playlist(user_id=user.id, **payload.model_dump())
     if pl.is_public and not pl.share_slug:
         pl.share_slug = Playlist.new_share_slug()
     db.add(pl)
@@ -50,8 +50,8 @@ async def create_playlist(
     return pl
 
 
-async def _get_playlist(db: AsyncSession, playlist_id: uuid.UUID, owner_id: uuid.UUID) -> Playlist:
-    res = await db.execute(select(Playlist).where(Playlist.id == playlist_id, Playlist.owner_id == owner_id))
+async def _get_playlist(db: AsyncSession, playlist_id: uuid.UUID, user_id: uuid.UUID) -> Playlist:
+    res = await db.execute(select(Playlist).where(Playlist.id == playlist_id, Playlist.user_id == user_id))
     pl = res.scalar_one_or_none()
     if not pl:
         raise HTTPException(status_code=404, detail="Playlist not found")
@@ -71,32 +71,16 @@ async def get_playlist(
         .order_by(PlaylistItem.position.asc())
     )
     item_rows = list(items.scalars().all())
-    song_ids = [i.song_id for i in item_rows]
-    songs = {}
-    if song_ids:
-        sres = await db.execute(select(Song).where(Song.owner_id == user.id, Song.id.in_(song_ids)))
-        songs = {s.id: s for s in sres.scalars().all()}
-
     enriched = []
     for it in item_rows:
-        s = songs.get(it.song_id)
+        item = await hydrate(db, it.provider, it.provider_id, it.type)
         enriched.append(
             {
                 "id": it.id,
-                "song_id": it.song_id,
                 "position": it.position,
-                "note": it.note,
-                "song": {
-                    "id": s.id,
-                    "title": s.title,
-                    "artist": s.artist,
-                    "album": s.album,
-                    "bpm": s.bpm,
-                    "key": s.key,
-                    "duration_sec": s.duration_sec,
-                }
-                if s
-                else None,
+                "ref": f"{it.provider}:{it.provider_id}",
+                "added_at": it.added_at,
+                "item": item,
             }
         )
 
@@ -145,17 +129,22 @@ async def add_song_to_playlist(
 ) -> dict:
     pl = await _get_playlist(db, playlist_id, user.id)
 
-    song_res = await db.execute(select(Song).where(Song.id == payload.song_id, Song.owner_id == user.id))
-    song = song_res.scalar_one_or_none()
-    if not song:
-        raise HTTPException(status_code=404, detail="Song not found")
+    provider, pid = parse_ref(payload.ref)
+    if provider != "deezer":
+        raise HTTPException(status_code=400, detail="Playlist items must be Deezer refs (deezer:{id})")
 
     max_pos = await db.execute(
         select(func.coalesce(func.max(PlaylistItem.position), 0)).where(PlaylistItem.playlist_id == pl.id)
     )
     next_pos = int(max_pos.scalar_one() or 0) + 1
 
-    item = PlaylistItem(playlist_id=pl.id, song_id=song.id, position=next_pos, note=payload.note)
+    item = PlaylistItem(
+        playlist_id=pl.id,
+        provider=provider,
+        provider_id=pid,
+        type=payload.type,
+        position=next_pos,
+    )
     db.add(item)
     await db.commit()
 
@@ -222,32 +211,16 @@ async def public_playlist(share_slug: str, db: AsyncSession = Depends(get_db)) -
         select(PlaylistItem).where(PlaylistItem.playlist_id == pl.id).order_by(PlaylistItem.position.asc())
     )
     item_rows = list(items.scalars().all())
-    song_ids = [i.song_id for i in item_rows]
-    songs = {}
-    if song_ids:
-        sres = await db.execute(select(Song).where(Song.owner_id == pl.owner_id, Song.id.in_(song_ids)))
-        songs = {s.id: s for s in sres.scalars().all()}
-
     enriched = []
     for it in item_rows:
-        s = songs.get(it.song_id)
+        item = await hydrate(db, it.provider, it.provider_id, it.type)
         enriched.append(
             {
                 "id": it.id,
-                "song_id": it.song_id,
                 "position": it.position,
-                "note": it.note,
-                "song": {
-                    "id": s.id,
-                    "title": s.title,
-                    "artist": s.artist,
-                    "album": s.album,
-                    "bpm": s.bpm,
-                    "key": s.key,
-                    "duration_sec": s.duration_sec,
-                }
-                if s
-                else None,
+                "ref": f"{it.provider}:{it.provider_id}",
+                "added_at": it.added_at,
+                "item": item,
             }
         )
 

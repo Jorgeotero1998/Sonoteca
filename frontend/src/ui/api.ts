@@ -1,4 +1,4 @@
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
 
 export type Token = { access_token: string; token_type: string };
 
@@ -21,7 +21,8 @@ async function request(path: string, init: RequestInit = {}) {
   const text = await res.text();
   const body = text ? safeJson(text) : null;
   if (!res.ok) {
-    const msg = (body && (body.detail || body.error)) ? (body.detail || body.error) : text || `HTTP ${res.status}`;
+    const raw = body && (body.detail || body.error) ? (body.detail || body.error) : text || `HTTP ${res.status}`;
+    const msg = typeof raw === "string" ? raw : JSON.stringify(raw);
     throw new Error(msg);
   }
   return body;
@@ -42,6 +43,34 @@ export const api = {
     login: (email: string, password: string) =>
       request("/auth/login", { method: "POST", body: JSON.stringify({ email, password }) }) as Promise<Token>,
   },
+  catalog: {
+    providers: () => request("/catalog/providers") as Promise<any>,
+    search: (params: Record<string, string> = {}) => {
+      const qs = new URLSearchParams(params).toString();
+      return request(`/catalog/search${qs ? `?${qs}` : ""}`) as Promise<any>;
+    },
+    track: (ref: string) => request(`/catalog/track/${encodeURIComponent(ref)}`) as Promise<any>,
+    album: (ref: string) => request(`/catalog/album/${encodeURIComponent(ref)}`) as Promise<any>,
+    artist: (ref: string) => request(`/catalog/artist/${encodeURIComponent(ref)}`) as Promise<any>,
+    charts: (params: Record<string, string> = {}) => {
+      const qs = new URLSearchParams(params).toString();
+      return request(`/catalog/charts${qs ? `?${qs}` : ""}`) as Promise<any>;
+    },
+    newReleases: (params: Record<string, string> = {}) => {
+      const qs = new URLSearchParams(params).toString();
+      return request(`/catalog/new-releases${qs ? `?${qs}` : ""}`) as Promise<any>;
+    },
+  },
+  me: {
+    favorites: () => request("/me/favorites") as Promise<any[]>,
+    favoriteAdd: (ref: string) => request(`/me/favorites/${encodeURIComponent(ref)}`, { method: "POST" }) as Promise<any>,
+    favoriteDel: (ref: string) => request(`/me/favorites/${encodeURIComponent(ref)}`, { method: "DELETE" }) as Promise<any>,
+    history: (limit?: number) => request(`/me/history${limit ? `?limit=${limit}` : ""}`) as Promise<any[]>,
+    historyAdd: (payload: any) => request("/me/history", { method: "POST", body: JSON.stringify(payload) }) as Promise<any>,
+    library: () => request("/me/library") as Promise<any[]>,
+    libraryAdd: (ref: string) => request(`/me/library/${encodeURIComponent(ref)}`, { method: "POST" }) as Promise<any>,
+    libraryDel: (ref: string) => request(`/me/library/${encodeURIComponent(ref)}`, { method: "DELETE" }) as Promise<any>,
+  },
   songs: {
     list: (params: Record<string, string> = {}) => {
       const qs = new URLSearchParams(params).toString();
@@ -51,6 +80,9 @@ export const api = {
     patch: (id: string, payload: any) =>
       request(`/songs/${id}`, { method: "PATCH", body: JSON.stringify(payload) }) as Promise<any>,
     del: (id: string) => request(`/songs/${id}`, { method: "DELETE" }) as Promise<any>,
+  },
+  browse: {
+    facets: () => request("/browse/facets") as Promise<any>,
   },
   playlists: {
     list: () => request("/playlists") as Promise<any[]>,

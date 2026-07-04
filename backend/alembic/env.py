@@ -10,7 +10,7 @@ from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
 
 from app.core.db import Base
-from app.models import song, playlist, user  # noqa: F401
+from app.models import catalog, playlist, song, user  # noqa: F401
 
 config = context.config
 

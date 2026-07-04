@@ -21,10 +21,10 @@ class PlaylistUpdate(BaseModel):
 
 class PlaylistItemOut(BaseModel):
     id: uuid.UUID
-    song_id: uuid.UUID
     position: int
-    note: Optional[str] = None
-    song: Optional[dict] = None
+    ref: str
+    added_at: Optional[datetime] = None
+    item: Optional[dict] = None
 
     model_config = {"from_attributes": True}
 
@@ -45,8 +45,8 @@ class PlaylistDetailOut(PlaylistOut):
 
 
 class PlaylistAddSongIn(BaseModel):
-    song_id: uuid.UUID
-    note: Optional[str] = None
+    ref: str = Field(min_length=3, max_length=220)
+    type: str = Field(default="track", pattern="^(track|album|artist)$")
 
 
 class PlaylistReorderIn(BaseModel):

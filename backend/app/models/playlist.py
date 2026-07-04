@@ -15,7 +15,7 @@ class Playlist(Base):
     __tablename__ = "playlists"
 
     id: Mapped[uuid.UUID] = mapped_column(Uuid(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    owner_id: Mapped[uuid.UUID] = mapped_column(
+    user_id: Mapped[uuid.UUID] = mapped_column(
         Uuid(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), index=True
     )
 
@@ -40,7 +40,9 @@ class PlaylistItem(Base):
     playlist_id: Mapped[uuid.UUID] = mapped_column(
         Uuid(as_uuid=True), ForeignKey("playlists.id", ondelete="CASCADE"), index=True
     )
-    song_id: Mapped[uuid.UUID] = mapped_column(Uuid(as_uuid=True), ForeignKey("songs.id", ondelete="CASCADE"))
+    provider: Mapped[str] = mapped_column(String(32))
+    provider_id: Mapped[str] = mapped_column(String(128))
+    type: Mapped[str] = mapped_column(String(16))  # track|album|artist (we store tracks in playlists today)
     position: Mapped[int] = mapped_column(Integer, index=True)
-    note: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    added_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=text("now()"))
 

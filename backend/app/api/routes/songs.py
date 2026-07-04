@@ -21,17 +21,27 @@ async def list_songs(
     db: AsyncSession = Depends(get_db),
     user: User = Depends(get_current_user),
     q: Optional[str] = None,
+    artist: Optional[str] = None,
+    album: Optional[str] = None,
     genre: Optional[str] = None,
+    year: Optional[int] = Query(default=None, ge=1900, le=2100),
     key: Optional[str] = None,
     bpm_min: Optional[int] = Query(default=None, ge=1, le=400),
     bpm_max: Optional[int] = Query(default=None, ge=1, le=400),
     tag: Optional[str] = None,
-    limit: int = Query(default=50, ge=1, le=200),
+    limit: int = Query(default=50, ge=1, le=500),
 ) -> List[Song]:
     filters = [Song.owner_id == user.id]
 
+    if artist:
+        filters.append(func.lower(Song.artist) == artist.lower())
+    if album:
+        filters.append(Song.album.is_not(None))
+        filters.append(func.lower(Song.album) == album.lower())
     if genre:
         filters.append(func.lower(Song.genre) == genre.lower())
+    if year is not None:
+        filters.append(Song.year == year)
     if key:
         filters.append(func.lower(Song.key) == key.lower())
     if bpm_min is not None:
@@ -64,10 +74,18 @@ async def create_song(
     db: AsyncSession = Depends(get_db),
     user: User = Depends(require_role("owner", "editor")),
 ) -> Song:
-    song = Song(owner_id=user.id, **payload.model_dump())
+    data = payload.model_dump()
+    if not data.get("cover_url"):
+        # Free placeholder images (nice for demo). Deterministic by UUID after insert.
+        data["cover_url"] = None
+    song = Song(owner_id=user.id, **data)
     db.add(song)
     await db.commit()
     await db.refresh(song)
+    if not song.cover_url:
+        song.cover_url = f"https://picsum.photos/seed/sonoteca-{song.id}/420/420"
+        await db.commit()
+        await db.refresh(song)
     return song
 
 

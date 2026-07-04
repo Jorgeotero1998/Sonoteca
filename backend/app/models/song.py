@@ -12,7 +12,8 @@ from app.core.db import Base
 
 
 class Song(Base):
-    __tablename__ = "songs"
+    # Legacy table kept for backwards compatibility with `/songs` endpoints.
+    __tablename__ = "legacy_songs"
 
     id: Mapped[uuid.UUID] = mapped_column(Uuid(as_uuid=True), primary_key=True, default=uuid.uuid4)
     owner_id: Mapped[uuid.UUID] = mapped_column(
@@ -27,6 +28,9 @@ class Song(Base):
     bpm: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
     key: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)
     duration_sec: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+
+    cover_url: Mapped[Optional[str]] = mapped_column(String(600), nullable=True)
+    audio_url: Mapped[Optional[str]] = mapped_column(String(900), nullable=True)
 
     tags: Mapped[List[str]] = mapped_column(JSONB, server_default=text("'[]'::jsonb"))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=text("now()"))

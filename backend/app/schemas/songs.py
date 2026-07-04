@@ -16,6 +16,8 @@ class SongCreate(BaseModel):
     bpm: Optional[int] = Field(default=None, ge=1, le=400)
     key: Optional[str] = Field(default=None, max_length=20)
     duration_sec: Optional[int] = Field(default=None, ge=1, le=60 * 60 * 6)
+    cover_url: Optional[str] = Field(default=None, max_length=600)
+    audio_url: Optional[str] = Field(default=None, max_length=900)
     tags: List[str] = Field(default_factory=list, max_length=50)
 
 
@@ -28,6 +30,8 @@ class SongUpdate(BaseModel):
     bpm: Optional[int] = Field(default=None, ge=1, le=400)
     key: Optional[str] = Field(default=None, max_length=20)
     duration_sec: Optional[int] = Field(default=None, ge=1, le=60 * 60 * 6)
+    cover_url: Optional[str] = Field(default=None, max_length=600)
+    audio_url: Optional[str] = Field(default=None, max_length=900)
     tags: Optional[List[str]] = None
 
 
@@ -41,6 +45,8 @@ class SongOut(BaseModel):
     bpm: Optional[int]
     key: Optional[str]
     duration_sec: Optional[int]
+    cover_url: Optional[str]
+    audio_url: Optional[str]
     tags: List[str]
     created_at: datetime
 

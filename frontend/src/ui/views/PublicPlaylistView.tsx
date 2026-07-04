@@ -19,23 +19,34 @@ export function PublicPlaylistView({ slug, toast }: { slug: string; toast: (m: s
   }, [slug]);
 
   return (
-    <div className="container">
-      <div className="glass" style={{ padding: 16 }}>
-        <div style={{ fontWeight: 780, letterSpacing: "-0.02em", fontSize: 18 }}>Public playlist</div>
-        <div className="muted" style={{ marginTop: 8 }}>
-          {busy ? "Loading…" : data ? data.name : "—"}
-        </div>
-        <div style={{ height: 12 }} />
-        <div className="card" style={{ padding: 16 }}>
-          <div style={{ display: "grid", gap: 10 }}>
-            {(data?.items || []).map((it: any) => (
-              <div key={it.id} className="pill">
-                <span>#{it.position}</span>
-                <span className="muted">{it.song ? `${it.song.artist} — ${it.song.title}` : it.song_id}</span>
-              </div>
-            ))}
-            {(data?.items || []).length === 0 ? <div className="muted">No items.</div> : null}
+    <div style={{ minHeight: "100%", display: "grid", placeItems: "center", padding: 16 }}>
+      <div className="card" style={{ width: "min(920px, 100%)", padding: 16 }}>
+        <div className="row">
+          <div>
+            <div className="h2">Public playlist</div>
+            <div className="kicker" style={{ marginTop: 6 }}>
+              {busy ? "Loading…" : data ? data.name : "—"}
+            </div>
           </div>
+          <a className="btn" href="/" title="Open app">
+            Open Sonoteca
+          </a>
+        </div>
+
+        <div style={{ height: 12 }} />
+        <div style={{ display: "grid", gap: 10 }}>
+          {(data?.items || []).map((it: any) => (
+            <div key={it.id} className="tile" style={{ padding: 12, display: "flex", gap: 12, alignItems: "center" }}>
+              <div className="chip">#{it.position}</div>
+              <div style={{ minWidth: 0 }}>
+                <div style={{ fontWeight: 760, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                  {it.item ? `${it.item.artist} — ${it.item.title}` : it.ref}
+                </div>
+                <div className="kicker">{it.item?.album ?? "—"}</div>
+              </div>
+            </div>
+          ))}
+          {(data?.items || []).length === 0 ? <div className="muted">No items.</div> : null}
         </div>
       </div>
     </div>

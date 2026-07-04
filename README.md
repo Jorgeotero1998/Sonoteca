@@ -6,13 +6,16 @@
 
 ---
 
-## Features / Funcionalidades
+## Features / Funcionalidades (Deezer‑first)
 
 - **Auth JWT + RBAC** (roles: `owner`, `editor`, `viewer`)
-- **Songs**: CRUD + search + filters (artist, album, genre, bpm range, key, tags)
-- **Playlists**: CRUD + add/remove songs + **reorder**
+- **Real catalog (no mocks)**:
+  - **Deezer API** (primary): **charts**, **new releases**, **search**, covers + durations + **official 30s previews**
+  - **Spotify Web API** (optional): extra metadata only when configured (never required)
+- **Playlists**: CRUD + add/remove tracks + **reorder**
 - **Public share link** for playlists (read‑only)
-- **Stats**: total songs, total playlists, duration totals, top genres/artists
+- **Real preview player (Spotify‑style)**: play/pause, seek, volume, next/prev, queue (HTML5 `<audio>`)
+- **Catalog API**: `/catalog/search`, `/catalog/charts`, `/catalog/new-releases`, `/catalog/track/{ref}`...
 - **OpenAPI/Swagger** docs on `/docs`
 
 ---
@@ -62,6 +65,13 @@ API:
 - `http://localhost:8000/health`
 - `http://localhost:8000/docs`
 
+### Quick smoke test (after login)
+
+- `GET /catalog/charts`
+- `GET /catalog/search?q=daft&type=track&provider=deezer`
+- `GET /me/favorites`
+- Playlists: create → add item `{"ref":"deezer:<id>","type":"track"}`
+
 ### 2) Frontend (React)
 
 ```bash
@@ -74,6 +84,17 @@ Web:
 - `http://localhost:5173`
 
 > Set `VITE_API_BASE_URL` in `frontend/.env` if needed.
+
+### Real providers setup / Configuración de proveedores reales
+
+Set these env vars in `backend/.env` (and on your deploy host):
+
+- `DEEZER_BASE_URL` (default: `https://api.deezer.com`)
+
+Optional (Spotify metadata only):
+
+- `SPOTIFY_CLIENT_ID`
+- `SPOTIFY_CLIENT_SECRET`
 
 ---
 
@@ -94,6 +115,35 @@ This repo ships with `render.yaml`.
 Environment variables you must set (Render):
 - `JWT_SECRET`
 - `CORS_ORIGINS`
+- `SPOTIFY_CLIENT_ID` (optional but recommended)
+- `SPOTIFY_CLIENT_SECRET` (optional but recommended)
+
+### Deezer‑first deploy (Vercel + Render/Railway)
+
+**Backend (Render o Railway)**
+
+- **Env mínimas**:
+  - `DATABASE_URL` (Postgres)
+  - `JWT_SECRET` (>= 32 chars)
+  - `CORS_ORIGINS` (ej: `https://<tu-vercel-app>.vercel.app`)
+  - `DEEZER_BASE_URL` (opcional, default `https://api.deezer.com`)
+- **Start command**:
+
+```bash
+python -m alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port $PORT
+```
+
+**Frontend (Vercel)**
+
+- Importá `frontend/` como proyecto.
+- **Build**: `npm run build`
+- **Output**: `dist`
+- **Env**:
+  - `VITE_API_BASE_URL` = URL pública del backend (Render/Railway)
+
+**Migraciones**
+
+- En Render/Railway, se corren al boot via start command (alembic).
 
 ---
 
