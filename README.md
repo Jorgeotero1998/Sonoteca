@@ -118,6 +118,63 @@ Environment variables you must set (Render):
 - `SPOTIFY_CLIENT_ID` (optional but recommended)
 - `SPOTIFY_CLIENT_SECRET` (optional but recommended)
 
+---
+
+## Vercel deployment (monorepo: frontend + backend + Vercel Postgres)
+
+This repo can be deployed as **one Vercel project** (no external hosts) using **Vercel Services**.
+The required config lives in the repo root: `vercel.json`.
+
+### 1) Create the Vercel project
+
+- Import this GitHub repo in Vercel (select the **repo root**, not `frontend/`).
+- Vercel will detect multiple services from `vercel.json` and deploy:
+  - **Frontend**: `frontend/` (Vite static build)
+  - **Backend**: `backend/` (FastAPI as Vercel Functions, routed under `/api/*`)
+
+### 2) Add Vercel Postgres
+
+- In Vercel → **Storage** → **Postgres** → create DB and attach it to the project.
+- Vercel injects `POSTGRES_URL` (and related vars). The backend will use these automatically.
+  - You can still set `DATABASE_URL` manually to override.
+
+### 3) Set environment variables (Project → Settings → Environment Variables)
+
+Required:
+- `JWT_SECRET` (>= 32 chars)
+- `CORS_ORIGINS` (e.g. `https://<your-project>.vercel.app`)
+
+Catalog providers:
+- `DEEZER_BASE_URL` (optional, default `https://api.deezer.com`)
+- `SPOTIFY_CLIENT_ID` (optional)
+- `SPOTIFY_CLIENT_SECRET` (optional)
+
+Database:
+- No action needed if you attached **Vercel Postgres** (uses `POSTGRES_URL*`).
+- If you want portability, set `DATABASE_URL` explicitly.
+
+### 4) Run migrations (manual)
+
+Serverless functions should **not** auto-run migrations on cold start. Run them manually:
+
+```bash
+cd backend
+
+# Option A: use DATABASE_URL (recommended)
+#   Set DATABASE_URL to your Vercel Postgres connection string, then:
+alembic upgrade head
+```
+
+Tip: for serverless environments, prefer the **pooled** connection string (`POSTGRES_URL`) for runtime.
+For migration/maintenance scripts, providers often recommend a **direct/non-pooling** URL when available
+(e.g. `POSTGRES_URL_NON_POOLING`).
+
+### 5) Verify
+
+- Frontend: `https://<your-project>.vercel.app`
+- Backend health: `https://<your-project>.vercel.app/api/health`
+- OpenAPI: `https://<your-project>.vercel.app/api/docs`
+
 ### Deezer‑first deploy (Vercel + Render/Railway)
 
 **Backend (Render o Railway)**

@@ -24,7 +24,12 @@ load_dotenv()
 
 
 def get_url() -> str:
-    url = os.getenv("DATABASE_URL", "")
+    url = (
+        os.getenv("DATABASE_URL", "")
+        or os.getenv("POSTGRES_URL", "")
+        or os.getenv("POSTGRES_PRISMA_URL", "")
+        or os.getenv("POSTGRES_URL_NON_POOLING", "")
+    )
     if not url:
         raise RuntimeError("DATABASE_URL env var is required for migrations")
     url = url.strip()

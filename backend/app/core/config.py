@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 from typing import List
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -25,10 +26,18 @@ class Settings(BaseSettings):
 
     @property
     def database_url_async(self) -> str:
-        url = (self.database_url or "").strip()
+        # Vercel Postgres injects `POSTGRES_URL*`; prefer those when `DATABASE_URL` isn't set.
+        # Keep `DATABASE_URL` as the primary override for portability (local/dev/other hosts).
+        env_url = (
+            os.getenv("DATABASE_URL")
+            or os.getenv("POSTGRES_URL")
+            or os.getenv("POSTGRES_PRISMA_URL")
+            or os.getenv("POSTGRES_URL_NON_POOLING")
+        )
+        url = (env_url or self.database_url or "").strip()
         if url.startswith("postgresql+asyncpg://"):
             return url
-        # Render often provides `postgres://` or `postgresql://`
+        # Common providers often provide `postgres://` or `postgresql://`
         if url.startswith("postgres://"):
             return url.replace("postgres://", "postgresql+asyncpg://", 1)
         if url.startswith("postgresql://"):
