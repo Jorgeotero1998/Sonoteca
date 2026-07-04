@@ -28,6 +28,26 @@ Sonoteca is a portfolio-ready music library where you can browse a real catalog,
 
 ## Local development
 
+### Option A: Docker Compose (recommended)
+
+Requirements: Docker Desktop.
+
+```bash
+docker compose up --build
+```
+
+Services:
+
+- Frontend: `http://localhost:5173`
+- Backend: `http://localhost:8000` (health: `/health`, docs: `/docs`)
+- Postgres: `localhost:5432`
+
+Optional Redis:
+
+```bash
+docker compose --profile redis up --build
+```
+
 ### Backend (FastAPI)
 
 Requirements: Python 3.11+ and Postgres.
