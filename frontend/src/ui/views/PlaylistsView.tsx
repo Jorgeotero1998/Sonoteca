@@ -274,67 +274,93 @@ export function PlaylistsView({
 
             <div style={{ height: 12 }} />
             <div style={{ display: "grid", gap: 10, maxHeight: 420, overflow: "auto", paddingRight: 6 }}>
-              {(detail.items || []).map((it: any) => (
-                <div
-                  key={it.id}
-                  className="card"
-                  style={{ padding: 12, background: "rgba(0,0,0,.22)", border: "1px solid rgba(255,255,255,.10)" }}
-                >
-                  {(() => {
-                    const t = it?.item ? { ...it.item, ref: it.ref } : null;
-                    return (
-                  <div className="row">
-                    <div className="muted" style={{ fontSize: 12 }}>
-                      #{it.position}
-                    </div>
-                    <div style={{ display: "flex", gap: 10 }}>
-                      {t?.preview_url || t?.audio_url ? (
-                        <button
-                          className="btn btnPrimary"
-                          onClick={() => onPlay(t, playlistQueue.length ? playlistQueue : [t])}
-                          disabled={busy}
-                        >
-                          Play
+              {(detail.items || []).map((it: any) => {
+                const t = it?.item ? { ...it.item, ref: it.ref } : null;
+                return (
+                  <div
+                    key={it.id}
+                    className="card"
+                    style={{
+                      padding: 12,
+                      background: "rgba(0,0,0,.22)",
+                      border: "1px solid rgba(255,255,255,.10)",
+                    }}
+                  >
+                    <div className="row">
+                      <div className="muted" style={{ fontSize: 12 }}>
+                        #{it.position}
+                      </div>
+                      <div style={{ display: "flex", gap: 10 }}>
+                        {t?.preview_url || t?.audio_url ? (
+                          <button
+                            className="btn btnPrimary"
+                            onClick={() => onPlay(t, playlistQueue.length ? playlistQueue : [t])}
+                            disabled={busy}
+                          >
+                            Play
+                          </button>
+                        ) : null}
+                        {!t?.preview_url ? (
+                          <a
+                            className="btn"
+                            href={t?.external_urls?.deezer || t?.embed_url || "#"}
+                            target="_blank"
+                            rel="noreferrer"
+                          >
+                            Open Deezer
+                          </a>
+                        ) : null}
+                        <button className="btn" onClick={() => removeItem(it.id)} disabled={busy}>
+                          Remove
                         </button>
-                      ) : null}
-                      {!t?.preview_url ? (
-                        <a className="btn" href={t?.external_urls?.deezer || t?.embed_url || "#"} target="_blank" rel="noreferrer">
-                          Open Deezer
-                        </a>
-                      ) : null}
-                      <button className="btn" onClick={() => removeItem(it.id)} disabled={busy}>
-                        Remove
-                      </button>
+                      </div>
                     </div>
-                  </div>
-                  <div style={{ display: "grid", gridTemplateColumns: "44px 1fr", gap: 10, alignItems: "center", marginTop: 8 }}>
                     <div
                       style={{
-                        width: 44,
-                        height: 44,
-                        borderRadius: 12,
-                        overflow: "hidden",
-                        border: "1px solid rgba(255,255,255,.14)",
-                        background: "rgba(255,255,255,.04)",
+                        display: "grid",
+                        gridTemplateColumns: "44px 1fr",
+                        gap: 10,
+                        alignItems: "center",
+                        marginTop: 8,
                       }}
                     >
-                      {t?.cover_url ? (
-                        <img src={t.cover_url} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
-                      ) : null}
-                    </div>
-                    <div style={{ minWidth: 0 }}>
-                      <div style={{ fontWeight: 700, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                        {t ? `${t.artist} — ${t.title}` : it.ref}
+                      <div
+                        style={{
+                          width: 44,
+                          height: 44,
+                          borderRadius: 12,
+                          overflow: "hidden",
+                          border: "1px solid rgba(255,255,255,.14)",
+                          background: "rgba(255,255,255,.04)",
+                        }}
+                      >
+                        {t?.cover_url ? (
+                          <img
+                            src={t.cover_url}
+                            alt=""
+                            style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                          />
+                        ) : null}
                       </div>
-                      <div className="muted" style={{ marginTop: 6, fontSize: 12 }}>
-                        {t ? `${t.album ?? "—"} · ${Math.round((t.duration_ms || 0) / 1000)}s` : "—"}
+                      <div style={{ minWidth: 0 }}>
+                        <div
+                          style={{
+                            fontWeight: 700,
+                            whiteSpace: "nowrap",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                          }}
+                        >
+                          {t ? `${t.artist} — ${t.title}` : it.ref}
+                        </div>
+                        <div className="muted" style={{ marginTop: 6, fontSize: 12 }}>
+                          {t ? `${t.album ?? "—"} · ${Math.round((t.duration_ms || 0) / 1000)}s` : "—"}
+                        </div>
                       </div>
                     </div>
                   </div>
-                    );
-                  })()}
-                </div>
-              ))}
+                );
+              })}
               {(detail.items || []).length === 0 ? <div className="muted">No items yet.</div> : null}
             </div>
           </>

@@ -16,6 +16,42 @@ function fmtTime(sec: number) {
 }
 
 export function App() {
+  const publicSlug = new URL(location.href).searchParams.get("public");
+  if (publicSlug) return <PublicApp slug={publicSlug} />;
+  return <MainApp />;
+}
+
+function PublicApp({ slug }: { slug: string }) {
+  const [toast, setToast] = useState<string | null>(null);
+  return (
+    <>
+      <PublicPlaylistView slug={slug} toast={setToast} />
+      {toast ? (
+        <div
+          className="chip"
+          style={{
+            position: "fixed",
+            left: 16,
+            right: 16,
+            bottom: 16,
+            maxWidth: 860,
+            margin: "0 auto",
+            display: "flex",
+            justifyContent: "space-between",
+            gap: 12,
+          }}
+        >
+          <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{toast}</span>
+          <button className="btn" style={{ padding: "6px 10px" }} onClick={() => setToast(null)}>
+            OK
+          </button>
+        </div>
+      ) : null}
+    </>
+  );
+}
+
+function MainApp() {
   const [route, setRoute] = useState<Route>("home");
   const [authed, setAuthed] = useState<boolean>(() => Boolean(localStorage.getItem("sonoteca_token")));
   const [toast, setToast] = useState<string | null>(null);
@@ -28,15 +64,6 @@ export function App() {
   const [vol, setVol] = useState(0.85);
 
   const now = queue[idx] ?? null;
-
-  const publicSlug = (() => {
-    const url = new URL(location.href);
-    return url.searchParams.get("public");
-  })();
-
-  if (publicSlug) {
-    return <PublicPlaylistView slug={publicSlug} toast={(m) => setToast(m)} />;
-  }
 
   async function tryPlay() {
     const el = audioRef.current;
@@ -211,7 +238,13 @@ export function App() {
         }
         playerRight={
           <>
-            <audio ref={(n) => (audioRef.current = n)} preload="metadata" crossOrigin="anonymous" />
+            <audio
+              ref={(n) => {
+                audioRef.current = n;
+              }}
+              preload="metadata"
+              crossOrigin="anonymous"
+            />
             <button className="btn" onClick={prev} disabled={!queue.length}>
               Prev
             </button>

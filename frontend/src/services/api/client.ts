@@ -32,8 +32,10 @@ export async function request(path: string, init: RequestInit = {}) {
       e instanceof Error && e.message
         ? e.message
         : "Network error";
+    const cause = e instanceof Error ? e : undefined;
     throw new Error(
-      `Cannot reach backend at ${API_BASE_URL}. Check backend is running, VITE_API_BASE_URL, and CORS. (${msg})`
+      `Cannot reach backend at ${API_BASE_URL}. Check backend is running, VITE_API_BASE_URL, and CORS. (${msg})`,
+      { cause },
     );
   }
   const text = await res.text();
