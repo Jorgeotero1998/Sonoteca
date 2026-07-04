@@ -3,12 +3,12 @@ from __future__ import annotations
 import os
 from logging.config import fileConfig
 
-from alembic import context
 from dotenv import load_dotenv
 from sqlalchemy import pool
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
 
+from alembic import context
 from app.core.config import normalize_database_url
 from app.core.db import Base
 from app.models import catalog, playlist, song, user  # noqa: F401
@@ -87,4 +87,3 @@ else:
     import asyncio
 
     asyncio.run(run_migrations_online())
-

@@ -33,5 +33,6 @@ class Song(Base):
     audio_url: Mapped[Optional[str]] = mapped_column(String(900), nullable=True)
 
     tags: Mapped[List[str]] = mapped_column(JSONB, server_default=text("'[]'::jsonb"))
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=text("now()"))
-
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=text("now()")
+    )

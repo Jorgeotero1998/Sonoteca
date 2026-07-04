@@ -1,10 +1,10 @@
 from __future__ import annotations
 
 import uuid
-from typing import List, Optional
+from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy import and_, delete, func, select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_user, require_role
@@ -51,7 +51,9 @@ async def create_playlist(
 
 
 async def _get_playlist(db: AsyncSession, playlist_id: uuid.UUID, user_id: uuid.UUID) -> Playlist:
-    res = await db.execute(select(Playlist).where(Playlist.id == playlist_id, Playlist.user_id == user_id))
+    res = await db.execute(
+        select(Playlist).where(Playlist.id == playlist_id, Playlist.user_id == user_id)
+    )
     pl = res.scalar_one_or_none()
     if not pl:
         raise HTTPException(status_code=404, detail="Playlist not found")
@@ -131,10 +133,14 @@ async def add_song_to_playlist(
 
     provider, pid = parse_ref(payload.ref)
     if provider != "deezer":
-        raise HTTPException(status_code=400, detail="Playlist items must be Deezer refs (deezer:{id})")
+        raise HTTPException(
+            status_code=400, detail="Playlist items must be Deezer refs (deezer:{id})"
+        )
 
     max_pos = await db.execute(
-        select(func.coalesce(func.max(PlaylistItem.position), 0)).where(PlaylistItem.playlist_id == pl.id)
+        select(func.coalesce(func.max(PlaylistItem.position), 0)).where(
+            PlaylistItem.playlist_id == pl.id
+        )
     )
     next_pos = int(max_pos.scalar_one() or 0) + 1
 
@@ -179,9 +185,7 @@ async def reorder_items(
 ) -> dict:
     pl = await _get_playlist(db, playlist_id, user.id)
 
-    res = await db.execute(
-        select(PlaylistItem).where(PlaylistItem.playlist_id == pl.id)
-    )
+    res = await db.execute(select(PlaylistItem).where(PlaylistItem.playlist_id == pl.id))
     items = list(res.scalars().all())
     by_id = {i.id: i for i in items}
 
@@ -208,7 +212,9 @@ async def public_playlist(share_slug: str, db: AsyncSession = Depends(get_db)) -
         raise HTTPException(status_code=404, detail="Playlist not found")
 
     items = await db.execute(
-        select(PlaylistItem).where(PlaylistItem.playlist_id == pl.id).order_by(PlaylistItem.position.asc())
+        select(PlaylistItem)
+        .where(PlaylistItem.playlist_id == pl.id)
+        .order_by(PlaylistItem.position.asc())
     )
     item_rows = list(items.scalars().all())
     enriched = []
@@ -226,4 +232,3 @@ async def public_playlist(share_slug: str, db: AsyncSession = Depends(get_db)) -
 
     base = PlaylistOut.model_validate(pl).model_dump()
     return {**base, "items": enriched}
-

@@ -8,14 +8,15 @@ import httpx
 
 from app.integrations.cache import TTLCache
 
-
 MB_BASE = "https://musicbrainz.org/ws/2"
 CAA_BASE = "https://coverartarchive.org"
 
 
 class MusicBrainzClient:
     def __init__(self) -> None:
-        self._http = httpx.AsyncClient(timeout=20, headers={"user-agent": "Sonoteca/1.0 (portfolio app; contact: none)"})
+        self._http = httpx.AsyncClient(
+            timeout=20, headers={"user-agent": "Sonoteca/1.0 (portfolio app; contact: none)"}
+        )
         self._cache = TTLCache()
 
     async def close(self) -> None:
@@ -37,7 +38,9 @@ class MusicBrainzClient:
         key = f"mb:rec:{limit}:{q.strip().lower()}"
 
         async def _do():
-            return await self._get(f"{MB_BASE}/recording", params={"query": q, "fmt": "json", "limit": limit})
+            return await self._get(
+                f"{MB_BASE}/recording", params={"query": q, "fmt": "json", "limit": limit}
+            )
 
         return await self._cache.get_or_set(key, ttl_sec=600, compute=_do)
 
@@ -53,7 +56,9 @@ class MusicBrainzClient:
             res.raise_for_status()
             body = res.json()
             images = body.get("images") or []
-            front = next((img for img in images if img.get("front")), None) or (images[0] if images else None)
+            front = next((img for img in images if img.get("front")), None) or (
+                images[0] if images else None
+            )
             if not front:
                 return None
             return (front.get("thumbnails") or {}).get("large") or front.get("image")
@@ -62,4 +67,3 @@ class MusicBrainzClient:
 
 
 musicbrainz = MusicBrainzClient()
-

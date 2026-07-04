@@ -53,4 +53,3 @@ async def facets(
         "albums": [{"value": a, "count": int(c)} for a, c in albums.all()],
         "years": [{"value": y, "count": int(c)} for y, c in years.all()],
     }
-

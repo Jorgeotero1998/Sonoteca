@@ -6,7 +6,6 @@ from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
-
 _SSL_REQUIRED_MODES = {"require", "verify-full", "verify-ca"}
 
 
@@ -101,4 +100,3 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
-

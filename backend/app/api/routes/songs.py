@@ -127,4 +127,3 @@ async def delete_song(
         raise HTTPException(status_code=404, detail="Song not found")
     await db.commit()
     return {"ok": True}
-

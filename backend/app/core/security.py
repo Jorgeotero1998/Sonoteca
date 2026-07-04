@@ -39,7 +39,8 @@ def create_access_token(*, sub: str, role: str) -> str:
 def decode_token(token: str) -> Optional[TokenPayload]:
     try:
         data = jwt.decode(token, settings.jwt_secret, algorithms=[settings.jwt_alg])
-        return TokenPayload(sub=str(data["sub"]), role=str(data.get("role", "viewer")), exp=int(data["exp"]))
+        return TokenPayload(
+            sub=str(data["sub"]), role=str(data.get("role", "viewer")), exp=int(data["exp"])
+        )
     except Exception:
         return None
-

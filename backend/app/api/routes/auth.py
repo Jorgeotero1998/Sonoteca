@@ -18,7 +18,9 @@ async def register(payload: RegisterIn, db: AsyncSession = Depends(get_db)) -> T
     if existing.scalar_one_or_none():
         raise HTTPException(status_code=400, detail="Email already in use")
 
-    user = User(email=payload.email, password_hash=hash_password(payload.password), role=payload.role)
+    user = User(
+        email=payload.email, password_hash=hash_password(payload.password), role=payload.role
+    )
     db.add(user)
     await db.commit()
     await db.refresh(user)
@@ -34,4 +36,3 @@ async def login(payload: LoginIn, db: AsyncSession = Depends(get_db)) -> TokenOu
         raise HTTPException(status_code=401, detail="Invalid credentials")
 
     return TokenOut(access_token=create_access_token(sub=str(user.id), role=user.role))
-

@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import uuid
+
 from fastapi import Depends, HTTPException
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy import select
@@ -7,8 +9,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.db import get_db
 from app.core.security import decode_token
-import uuid
-
 from app.models.user import User
 
 bearer = HTTPBearer(auto_error=False)
@@ -44,4 +44,3 @@ def require_role(*allowed: str):
         return user
 
     return _guard
-

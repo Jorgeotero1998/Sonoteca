@@ -3,13 +3,12 @@ from __future__ import annotations
 import base64
 import time
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional
+from typing import List, Optional
 
 import httpx
 
 from app.core.config import settings
 from app.integrations.cache import TTLCache
-
 
 SPOTIFY_API = "https://api.spotify.com/v1"
 SPOTIFY_ACCOUNTS = "https://accounts.spotify.com/api/token"
@@ -60,7 +59,10 @@ class SpotifyClient:
         basic = base64.b64encode(f"{cid}:{csec}".encode("utf-8")).decode("ascii")
         res = await self._http.post(
             SPOTIFY_ACCOUNTS,
-            headers={"authorization": f"Basic {basic}", "content-type": "application/x-www-form-urlencoded"},
+            headers={
+                "authorization": f"Basic {basic}",
+                "content-type": "application/x-www-form-urlencoded",
+            },
             data={"grant_type": "client_credentials"},
         )
         res.raise_for_status()
@@ -72,7 +74,9 @@ class SpotifyClient:
 
     async def _get(self, path: str, params: Optional[dict] = None) -> dict:
         token = await self._get_token()
-        res = await self._http.get(f"{SPOTIFY_API}{path}", params=params, headers={"authorization": f"Bearer {token}"})
+        res = await self._http.get(
+            f"{SPOTIFY_API}{path}", params=params, headers={"authorization": f"Bearer {token}"}
+        )
         res.raise_for_status()
         return res.json()
 
@@ -150,8 +154,14 @@ class SpotifyClient:
         cache_key = f"spotify:search:{kind}:{limit}:{q.strip().lower()}"
 
         async def _do():
-            body = await self._get("/search", params={"q": q, "type": kind, "limit": limit, "market": "US"})
-            items = (((body.get(f"{kind}s") or {}).get("items")) or []) if kind != "album" else (((body.get("albums") or {}).get("items")) or [])
+            body = await self._get(
+                "/search", params={"q": q, "type": kind, "limit": limit, "market": "US"}
+            )
+            items = (
+                (((body.get(f"{kind}s") or {}).get("items")) or [])
+                if kind != "album"
+                else (((body.get("albums") or {}).get("items")) or [])
+            )
             if kind == "track":
                 out = [self.normalize_track(x) for x in items]
             elif kind == "artist":
@@ -200,10 +210,13 @@ class SpotifyClient:
         async def _do():
             body = await self._get("/browse/new-releases", params={"limit": limit, "country": "US"})
             items = ((body.get("albums") or {}).get("items")) or []
-            return {"provider": "spotify", "type": "album", "items": [self.normalize_album(x) for x in items]}
+            return {
+                "provider": "spotify",
+                "type": "album",
+                "items": [self.normalize_album(x) for x in items],
+            }
 
         return await self._cache.get_or_set(cache_key, ttl_sec=300, compute=_do)
 
 
 spotify = SpotifyClient()
-

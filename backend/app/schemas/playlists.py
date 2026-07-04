@@ -51,4 +51,3 @@ class PlaylistAddSongIn(BaseModel):
 
 class PlaylistReorderIn(BaseModel):
     ordered_item_ids: List[uuid.UUID]
-

@@ -4,7 +4,6 @@ import time
 from dataclasses import dataclass
 from typing import Any, Callable, Dict, Generic, Optional, TypeVar
 
-
 T = TypeVar("T")
 
 
@@ -39,4 +38,3 @@ class TTLCache:
             out = await out  # type: ignore[no-untyped-call]
         self.set(key, out, ttl_sec=ttl_sec)
         return out
-

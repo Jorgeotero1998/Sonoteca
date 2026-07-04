@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import re
-from typing import Any, Optional, Tuple
+from typing import Optional, Tuple
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 
@@ -9,7 +9,6 @@ from app.api.deps import get_current_user
 from app.integrations.deezer import deezer
 from app.integrations.spotify import spotify
 from app.models.user import User
-
 
 router = APIRouter(prefix="/catalog", tags=["catalog"])
 
@@ -135,7 +134,7 @@ async def get_track(ref: str, user: User = Depends(get_current_user)) -> dict:
         t = await spotify.get_track(pid)
         if not t.get("preview_url"):
             # Try to obtain a Deezer preview opportunistically.
-            dz = await deezer.search(f'{t.get("artist")} {t.get("title")}', kind="track", limit=10)
+            dz = await deezer.search(f"{t.get('artist')} {t.get('title')}", kind="track", limit=10)
             m = _best_deezer_match(t, dz.get("items") or [])
             if m and m.get("preview_url"):
                 t["preview_url"] = m.get("preview_url")
@@ -215,4 +214,3 @@ async def new_releases(
     _ = user
     # Deezer is default/primary for new releases.
     return await deezer.new_releases(limit=min(limit, 50), index=index)
-

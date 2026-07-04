@@ -51,13 +51,20 @@ class DeezerClient:
             "id": did,
             "title": t.get("title"),
             "artist": artist.get("name"),
-            "artists": [{"id": str(artist.get("id")) if artist.get("id") is not None else None, "name": artist.get("name")}],
+            "artists": [
+                {
+                    "id": str(artist.get("id")) if artist.get("id") is not None else None,
+                    "name": artist.get("name"),
+                }
+            ],
             "album": album.get("title"),
             "album_id": str(album.get("id")) if album.get("id") is not None else None,
             "duration_ms": (int(t.get("duration") or 0) * 1000) or None,
             "rank": t.get("rank"),
             "explicit": t.get("explicit_lyrics"),
-            "cover_url": album.get("cover_xl") or album.get("cover_big") or album.get("cover_medium"),
+            "cover_url": album.get("cover_xl")
+            or album.get("cover_big")
+            or album.get("cover_medium"),
             "preview_url": t.get("preview"),
             "embed_url": _embed("track", did) if did else None,
             "external_urls": {"deezer": t.get("link")},
@@ -72,7 +79,12 @@ class DeezerClient:
             "id": did,
             "title": a.get("title"),
             "artist": artist.get("name"),
-            "artists": [{"id": str(artist.get("id")) if artist.get("id") is not None else None, "name": artist.get("name")}],
+            "artists": [
+                {
+                    "id": str(artist.get("id")) if artist.get("id") is not None else None,
+                    "name": artist.get("name"),
+                }
+            ],
             "release_date": a.get("release_date"),
             "cover_url": a.get("cover_xl") or a.get("cover_big") or a.get("cover_medium"),
             "embed_url": _embed("album", did) if did else None,
@@ -102,7 +114,9 @@ class DeezerClient:
         cache_key = f"deezer:search:{kind}:{limit}:{index}:{q.strip().lower()}"
 
         async def _do():
-            body = await self._get(f"/search/{kind}", params={"q": q, "limit": limit, "index": index})
+            body = await self._get(
+                f"/search/{kind}", params={"q": q, "limit": limit, "index": index}
+            )
             items = body.get("data") or []
             if kind == "track":
                 out = [self.normalize_track(x) for x in items]
@@ -151,13 +165,21 @@ class DeezerClient:
         cache_key = f"deezer:artist_top:{artist_id}:{limit}:{index}"
 
         async def _do():
-            body = await self._get(f"/artist/{artist_id}/top", params={"limit": limit, "index": index})
+            body = await self._get(
+                f"/artist/{artist_id}/top", params={"limit": limit, "index": index}
+            )
             items = body.get("data") or []
             next_url = body.get("next")
             out = [self.normalize_track(x) for x in items]
             has_more = bool(next_url) or (len(out) == limit)
             next_index = index + len(out) if has_more else None
-            return {"provider": "deezer", "type": "track", "items": out, "has_more": has_more, "next_index": next_index}
+            return {
+                "provider": "deezer",
+                "type": "track",
+                "items": out,
+                "has_more": has_more,
+                "next_index": next_index,
+            }
 
         return await self._cache.get_or_set(cache_key, ttl_sec=120, compute=_do)
 
@@ -167,13 +189,21 @@ class DeezerClient:
         cache_key = f"deezer:artist_albums:{artist_id}:{limit}:{index}"
 
         async def _do():
-            body = await self._get(f"/artist/{artist_id}/albums", params={"limit": limit, "index": index})
+            body = await self._get(
+                f"/artist/{artist_id}/albums", params={"limit": limit, "index": index}
+            )
             items = body.get("data") or []
             next_url = body.get("next")
             out = [self.normalize_album(x) for x in items]
             has_more = bool(next_url) or (len(out) == limit)
             next_index = index + len(out) if has_more else None
-            return {"provider": "deezer", "type": "album", "items": out, "has_more": has_more, "next_index": next_index}
+            return {
+                "provider": "deezer",
+                "type": "album",
+                "items": out,
+                "has_more": has_more,
+                "next_index": next_index,
+            }
 
         return await self._cache.get_or_set(cache_key, ttl_sec=300, compute=_do)
 
@@ -186,9 +216,16 @@ class DeezerClient:
             body = await self._get("/chart", params={"limit": limit, "index": index})
             return {
                 "provider": "deezer",
-                "tracks": [self.normalize_track(x) for x in ((body.get("tracks") or {}).get("data") or [])],
-                "albums": [self.normalize_album(x) for x in ((body.get("albums") or {}).get("data") or [])],
-                "artists": [self.normalize_artist(x) for x in ((body.get("artists") or {}).get("data") or [])],
+                "tracks": [
+                    self.normalize_track(x) for x in ((body.get("tracks") or {}).get("data") or [])
+                ],
+                "albums": [
+                    self.normalize_album(x) for x in ((body.get("albums") or {}).get("data") or [])
+                ],
+                "artists": [
+                    self.normalize_artist(x)
+                    for x in ((body.get("artists") or {}).get("data") or [])
+                ],
                 "playlists": (body.get("playlists") or {}).get("data") or [],
             }
 
@@ -203,10 +240,13 @@ class DeezerClient:
             # Deezer editorial releases (global)
             body = await self._get("/editorial/0/releases", params={"limit": limit, "index": index})
             items = body.get("data") or []
-            return {"provider": "deezer", "type": "album", "items": [self.normalize_album(x) for x in items]}
+            return {
+                "provider": "deezer",
+                "type": "album",
+                "items": [self.normalize_album(x) for x in items],
+            }
 
         return await self._cache.get_or_set(cache_key, ttl_sec=300, compute=_do)
 
 
 deezer = DeezerClient()
-

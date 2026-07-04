@@ -13,7 +13,6 @@ from app.integrations.deezer import deezer
 from app.integrations.spotify import spotify
 from app.models.catalog import CatalogItem
 
-
 _REF_RE = re.compile(r"^(?P<provider>[a-zA-Z0-9_]+):(?P<id>.+)$")
 
 
@@ -77,7 +76,9 @@ async def hydrate(db: AsyncSession, provider: str, provider_id: str, type: str) 
     row = (
         await db.execute(
             select(CatalogItem).where(
-                CatalogItem.provider == provider, CatalogItem.provider_id == provider_id, CatalogItem.type == type
+                CatalogItem.provider == provider,
+                CatalogItem.provider_id == provider_id,
+                CatalogItem.type == type,
             )
         )
     ).scalar_one_or_none()
@@ -99,7 +100,9 @@ async def hydrate(db: AsyncSession, provider: str, provider_id: str, type: str) 
         if type == "track":
             item = await spotify.get_track(provider_id)
             if not item.get("preview_url"):
-                dz = await deezer.search(f'{item.get("artist")} {item.get("title")}', kind="track", limit=10)
+                dz = await deezer.search(
+                    f"{item.get('artist')} {item.get('title')}", kind="track", limit=10
+                )
                 m = _best_deezer_match(item, dz.get("items") or [])
                 if m and m.get("preview_url"):
                     item["preview_url"] = m.get("preview_url")
@@ -128,4 +131,3 @@ async def hydrate(db: AsyncSession, provider: str, provider_id: str, type: str) 
         )
     await db.commit()
     return item
-

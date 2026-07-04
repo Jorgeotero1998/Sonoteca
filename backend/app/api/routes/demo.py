@@ -11,4 +11,3 @@ async def seed():
         status_code=410,
         detail="Demo seeding is disabled. Use real providers via /catalog/* (Spotify/Deezer).",
     )
-

@@ -18,12 +18,15 @@ async def overview(
     db: AsyncSession = Depends(get_db),
     user: User = Depends(get_current_user),
 ):
-    songs_count = await db.execute(select(func.count()).select_from(Song).where(Song.owner_id == user.id))
-    playlists_count = await db.execute(select(func.count()).select_from(Playlist).where(Playlist.owner_id == user.id))
+    songs_count = await db.execute(
+        select(func.count()).select_from(Song).where(Song.owner_id == user.id)
+    )
+    playlists_count = await db.execute(
+        select(func.count()).select_from(Playlist).where(Playlist.owner_id == user.id)
+    )
 
     duration_sum = await db.execute(
-        select(func.coalesce(func.sum(Song.duration_sec), 0))
-        .where(Song.owner_id == user.id)
+        select(func.coalesce(func.sum(Song.duration_sec), 0)).where(Song.owner_id == user.id)
     )
 
     top_genres = await db.execute(
@@ -48,4 +51,3 @@ async def overview(
         "top_genres": [{"genre": g, "count": int(c)} for g, c in top_genres.all()],
         "top_artists": [{"artist": a, "count": int(c)} for a, c in top_artists.all()],
     }
-

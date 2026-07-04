@@ -19,4 +19,3 @@ class HydratedOut(BaseModel):
     played_at: Optional[datetime] = None
     context: Optional[dict[str, Any]] = None
     item: dict[str, Any]
-

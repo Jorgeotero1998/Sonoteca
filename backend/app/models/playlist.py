@@ -25,7 +25,9 @@ class Playlist(Base):
     is_public: Mapped[bool] = mapped_column(Boolean, server_default=text("false"))
     share_slug: Mapped[Optional[str]] = mapped_column(String(64), unique=True, nullable=True)
 
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=text("now()"))
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=text("now()")
+    )
 
     @staticmethod
     def new_share_slug() -> str:
@@ -42,7 +44,10 @@ class PlaylistItem(Base):
     )
     provider: Mapped[str] = mapped_column(String(32))
     provider_id: Mapped[str] = mapped_column(String(128))
-    type: Mapped[str] = mapped_column(String(16))  # track|album|artist (we store tracks in playlists today)
+    type: Mapped[str] = mapped_column(
+        String(16)
+    )  # track|album|artist (we store tracks in playlists today)
     position: Mapped[int] = mapped_column(Integer, index=True)
-    added_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=text("now()"))
-
+    added_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=text("now()")
+    )
