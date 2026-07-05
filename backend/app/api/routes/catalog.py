@@ -3,12 +3,10 @@ from __future__ import annotations
 import re
 from typing import Optional, Tuple
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query
 
-from app.api.deps import get_current_user
 from app.integrations.deezer import deezer
 from app.integrations.spotify import spotify
-from app.models.user import User
 
 router = APIRouter(prefix="/catalog", tags=["catalog"])
 
@@ -81,10 +79,7 @@ async def search(
     limit: int = Query(default=25, ge=1, le=50),
     provider: str = Query(default="deezer", pattern="^(deezer|spotify)$"),
     index: int = Query(default=0, ge=0, le=10000),
-    user: User = Depends(get_current_user),
 ) -> dict:
-    # user is currently required to keep parity with the rest of the API auth flow.
-    _ = user
     kind = type.lower()
 
     p = provider.lower().strip()
@@ -127,8 +122,7 @@ async def search(
 
 
 @router.get("/track/{ref}")
-async def get_track(ref: str, user: User = Depends(get_current_user)) -> dict:
-    _ = user
+async def get_track(ref: str) -> dict:
     provider, pid = _parse_ref(ref)
     if provider == "spotify":
         t = await spotify.get_track(pid)
@@ -146,8 +140,7 @@ async def get_track(ref: str, user: User = Depends(get_current_user)) -> dict:
 
 
 @router.get("/album/{ref}")
-async def get_album(ref: str, user: User = Depends(get_current_user)) -> dict:
-    _ = user
+async def get_album(ref: str) -> dict:
     provider, pid = _parse_ref(ref)
     if provider == "spotify":
         return await spotify.get_album(pid)
@@ -157,8 +150,7 @@ async def get_album(ref: str, user: User = Depends(get_current_user)) -> dict:
 
 
 @router.get("/artist/{ref}")
-async def get_artist(ref: str, user: User = Depends(get_current_user)) -> dict:
-    _ = user
+async def get_artist(ref: str) -> dict:
     provider, pid = _parse_ref(ref)
     if provider == "spotify":
         return await spotify.get_artist(pid)
@@ -172,9 +164,7 @@ async def artist_top(
     ref: str,
     limit: int = Query(default=25, ge=1, le=50),
     index: int = Query(default=0, ge=0, le=10000),
-    user: User = Depends(get_current_user),
 ) -> dict:
-    _ = user
     provider, pid = _parse_ref(ref)
     if provider != "deezer":
         raise HTTPException(status_code=400, detail="Artist top is Deezer-only for this build")
@@ -186,9 +176,7 @@ async def artist_albums(
     ref: str,
     limit: int = Query(default=25, ge=1, le=50),
     index: int = Query(default=0, ge=0, le=10000),
-    user: User = Depends(get_current_user),
 ) -> dict:
-    _ = user
     provider, pid = _parse_ref(ref)
     if provider != "deezer":
         raise HTTPException(status_code=400, detail="Artist albums is Deezer-only for this build")
@@ -199,9 +187,7 @@ async def artist_albums(
 async def charts(
     limit: int = Query(default=25, ge=1, le=50),
     index: int = Query(default=0, ge=0, le=10000),
-    user: User = Depends(get_current_user),
 ) -> dict:
-    _ = user
     return await deezer.charts(limit=limit, index=index)
 
 
@@ -209,8 +195,5 @@ async def charts(
 async def new_releases(
     limit: int = Query(default=25, ge=1, le=50),
     index: int = Query(default=0, ge=0, le=10000),
-    user: User = Depends(get_current_user),
 ) -> dict:
-    _ = user
-    # Deezer is default/primary for new releases.
     return await deezer.new_releases(limit=min(limit, 50), index=index)
