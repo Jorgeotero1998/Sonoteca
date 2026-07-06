@@ -1,8 +1,10 @@
 # Sonoteca — Music Library (FastAPI + React)
 
-**Live Demo:** [https://sonoteca-hzbi.vercel.app/](https://sonoteca-hzbi.vercel.app/)
+**Live:** [sonoteca-hzbi.vercel.app](https://sonoteca-hzbi.vercel.app/) · **Stack:** React + FastAPI + PostgreSQL (Neon) on Vercel
 
-Sonoteca is a portfolio-ready music library where you can browse a real catalog, preview tracks, and organize your library.
+Production-grade music platform — real **Deezer API** catalog, 30s previews, JWT auth, RBAC, playlists, and listening history. Monorepo deployed as a single Vercel project (`/api` backend + React frontend). Refs-only persistence — no audio hosting.
+
+**Architecture:** `React (Vite)` → `FastAPI /api` → `SQLAlchemy + Alembic` → `Neon Postgres` · `Deezer API` for catalog
 
 ## Key features
 
