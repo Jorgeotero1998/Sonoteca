@@ -24,6 +24,15 @@ Production-grade music platform — real **Deezer API** catalog, 30s previews, J
                     └─────────────────┘
 ```
 
+## Case study
+
+| | |
+|---|---|
+| **Problem** | Personal music library without hosting audio — browse, preview, and organize tracks from a real catalog with persistent user data. |
+| **Solution** | React + FastAPI monorepo on Vercel: Deezer API for catalog/30s previews, Neon Postgres for refs-only storage, JWT + RBAC, built-in player with queue and playlists. |
+| **Stack** | React · TypeScript · Vite · FastAPI · SQLAlchemy · Alembic · asyncpg · PostgreSQL (Neon) · Vercel |
+| **Key decisions** | Refs-only persistence (no audio hosting) · Single Vercel deploy (`/` + `/api/*`) · Alembic migrations against Neon · Secrets in Vercel env vars |
+
 ## Key features
 
 - Deezer-first browsing/search with **official 30s previews**
