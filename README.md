@@ -1,10 +1,28 @@
 # Sonoteca — Music Library (FastAPI + React)
 
+[![Live Demo](https://img.shields.io/badge/🚀_Live_Demo-sonoteca--hzbi.vercel.app-000000?style=for-the-badge&logo=vercel&logoColor=white)](https://sonoteca-hzbi.vercel.app/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=flat-square&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
+[![React](https://img.shields.io/badge/React-61DAFB?style=flat-square&logo=react&logoColor=black)](https://react.dev/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?style=flat-square&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=flat-square&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Vercel](https://img.shields.io/badge/Vercel-000000?style=flat-square&logo=vercel&logoColor=white)](https://vercel.com/)
+
 **Live:** [sonoteca-hzbi.vercel.app](https://sonoteca-hzbi.vercel.app/) · **Stack:** React + FastAPI + PostgreSQL (Neon) on Vercel
 
 Production-grade music platform — real **Deezer API** catalog, 30s previews, JWT auth, RBAC, playlists, and listening history. Monorepo deployed as a single Vercel project (`/api` backend + React frontend). Refs-only persistence — no audio hosting.
 
-**Architecture:** `React (Vite)` → `FastAPI /api` → `SQLAlchemy + Alembic` → `Neon Postgres` · `Deezer API` for catalog
+```
+┌─────────────┐     ┌──────────────────┐     ┌─────────────────────┐     ┌──────────────┐
+│ React (Vite)│────▶│ FastAPI  /api    │────▶│ SQLAlchemy + Alembic│────▶│ Neon Postgres│
+│  TypeScript │     │ JWT · RBAC · API │     │   asyncpg · PyJWT   │     │  refs-only   │
+└─────────────┘     └────────┬─────────┘     └─────────────────────┘     └──────────────┘
+                             │
+                             ▼
+                    ┌─────────────────┐
+                    │   Deezer API    │
+                    │ catalog · 30s   │
+                    └─────────────────┘
+```
 
 ## Key features
 
