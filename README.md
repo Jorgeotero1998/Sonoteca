@@ -1,6 +1,7 @@
 # Sonoteca — Music Library (FastAPI + React)
 
 [![Live Demo](https://img.shields.io/badge/🚀_Live_Demo-sonoteca--hzbi.vercel.app-000000?style=for-the-badge&logo=vercel&logoColor=white)](https://sonoteca-hzbi.vercel.app/)
+[![CI](https://github.com/Jorgeotero1998/Sonoteca/actions/workflows/ci.yml/badge.svg)](https://github.com/Jorgeotero1998/Sonoteca/actions/workflows/ci.yml)
 [![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=flat-square&logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
 [![React](https://img.shields.io/badge/React-61DAFB?style=flat-square&logo=react&logoColor=black)](https://react.dev/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?style=flat-square&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
