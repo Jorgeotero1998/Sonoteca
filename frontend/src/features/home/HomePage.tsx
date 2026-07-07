@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { sonotecaApi } from "../../services/api/sonotecaApi";
 import { usePlayerStore, type Track } from "../../store/playerStore";
 import { GridSkeleton, MediaCard, SectionHeader, useIsCurrent } from "../../components/media";
+import { MotionGrid, motionCard } from "../../components/motion";
+import { motion } from "framer-motion";
 import { PlayIcon } from "../../components/icons";
 
 function asTrack(x: any): Track {
@@ -31,24 +33,26 @@ function ChartCard({ track, queue }: { track: Track; queue: Track[] }) {
   const nav = useNavigate();
   const { isCurrent, isPlaying } = useIsCurrent(track.ref);
   return (
-    <MediaCard
-      title={track.title}
-      subtitle={track.artist}
-      imageUrl={track.cover_url}
-      playing={isPlaying}
-      onOpen={() => nav(`/track/${encodeURIComponent(track.ref)}`)}
-      onPlay={
-        track.preview_url
-          ? () => {
-              if (isCurrent) togglePlay();
-              else {
-                const start = queue.findIndex((t) => t.ref === track.ref);
-                setQueue(queue, start < 0 ? 0 : start);
+    <motion.div variants={motionCard}>
+      <MediaCard
+        title={track.title}
+        subtitle={track.artist}
+        imageUrl={track.cover_url}
+        playing={isPlaying}
+        onOpen={() => nav(`/track/${encodeURIComponent(track.ref)}`)}
+        onPlay={
+          track.preview_url
+            ? () => {
+                if (isCurrent) togglePlay();
+                else {
+                  const start = queue.findIndex((t) => t.ref === track.ref);
+                  setQueue(queue, start < 0 ? 0 : start);
+                }
               }
-            }
-          : undefined
-      }
-    />
+            : undefined
+        }
+      />
+    </motion.div>
   );
 }
 
@@ -144,11 +148,11 @@ export function HomePage() {
       {chartsLoading ? (
         <GridSkeleton count={12} />
       ) : (
-        <div className="grid">
+        <MotionGrid>
           {charts.map((c) => (
             <ChartCard key={c.ref} track={asTrack(c)} queue={playable} />
           ))}
-        </div>
+        </MotionGrid>
       )}
       <div ref={chartsSentinel} style={{ height: 1 }} />
 
@@ -156,17 +160,18 @@ export function HomePage() {
       {relLoading ? (
         <GridSkeleton count={12} />
       ) : (
-        <div className="grid">
+        <MotionGrid>
           {releases.map((a) => (
-            <MediaCard
-              key={a.ref}
-              title={a.title}
-              subtitle={a.artist}
-              imageUrl={a.cover_url}
-              onOpen={() => nav(`/album/${encodeURIComponent(a.ref)}`)}
-            />
+            <motion.div key={a.ref} variants={motionCard}>
+              <MediaCard
+                title={a.title}
+                subtitle={a.artist}
+                imageUrl={a.cover_url}
+                onOpen={() => nav(`/album/${encodeURIComponent(a.ref)}`)}
+              />
+            </motion.div>
           ))}
-        </div>
+        </MotionGrid>
       )}
       <div ref={relSentinel} style={{ height: 1 }} />
       {busy || relLoading ? <div className="muted2" style={{ padding: "16px 4px", fontSize: 13 }}>Loading more…</div> : null}

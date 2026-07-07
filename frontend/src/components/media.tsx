@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { motion } from "framer-motion";
 import { HeartIcon, PauseIcon, PlayIcon } from "./icons";
 import { useFavoritesStore } from "../store/favoritesStore";
 import { usePlayerStore, type Track } from "../store/playerStore";
@@ -40,7 +41,13 @@ export function MediaCard({
   fallback?: ReactNode;
 }) {
   return (
-    <div className="mediaCard" onClick={onOpen} role={onOpen ? "button" : undefined} tabIndex={onOpen ? 0 : undefined}
+    <motion.div
+      className="mediaCard"
+      onClick={onOpen}
+      role={onOpen ? "button" : undefined}
+      tabIndex={onOpen ? 0 : undefined}
+      whileHover={{ y: -6, transition: { duration: 0.2 } }}
+      whileTap={{ scale: 0.98 }}
       onKeyDown={(e) => {
         if (onOpen && (e.key === "Enter" || e.key === " ")) {
           e.preventDefault();
@@ -59,21 +66,23 @@ export function MediaCard({
           <div className="skeleton" style={{ width: "100%", height: "100%" }} />
         )}
         {onPlay ? (
-          <button
+          <motion.button
             className="playFab"
             aria-label={playing ? "Pause" : `Play ${title}`}
+            whileHover={{ scale: 1.12 }}
+            whileTap={{ scale: 0.95 }}
             onClick={(e) => {
               e.stopPropagation();
               onPlay();
             }}
           >
             {playing ? <PauseIcon size={22} /> : <PlayIcon size={22} />}
-          </button>
+          </motion.button>
         ) : null}
       </div>
       <div className="mediaCard__title truncate">{title}</div>
       {subtitle ? <div className="mediaCard__sub truncate">{subtitle}</div> : null}
-    </div>
+    </motion.div>
   );
 }
 

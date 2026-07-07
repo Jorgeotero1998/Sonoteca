@@ -1,11 +1,14 @@
 import { useEffect, useRef, useState, type CSSProperties } from "react";
+import { AnimatePresence } from "framer-motion";
 import { sonotecaApi } from "../../services/api/sonotecaApi";
 import { useAuthStore } from "../../store/authStore";
 import { usePlayerStore } from "../../store/playerStore";
 import { useUIStore } from "../../store/uiStore";
 import { useFavoritesStore } from "../../store/favoritesStore";
+import { useAudioAnalyser } from "../../hooks/useAudioAnalyser";
+import { NowPlayingSheet } from "../../components/motion";
+import { AudioVisualizer } from "../../components/AudioVisualizer";
 import {
-  ChevronDownIcon,
   ExternalIcon,
   HeartIcon,
   NextIcon,
@@ -47,6 +50,8 @@ export function PlayerBar() {
   const canPlay = Boolean(now?.preview_url);
   const canFav = Boolean(now?.ref?.startsWith("deezer:"));
 
+  useAudioAnalyser(audioRef, isPlaying && canPlay);
+
   useEffect(() => {
     const url = now?.cover_url;
     if (!url) return;
@@ -58,6 +63,7 @@ export function PlayerBar() {
         document.documentElement.style.setProperty("--acc", acc);
         document.documentElement.style.setProperty("--acc-2", shade(acc, -18));
         document.documentElement.style.setProperty("--acc-3", acc3);
+        document.documentElement.style.setProperty("--cover-glow", acc);
       } catch {
         /* ignore */
       }
@@ -240,6 +246,11 @@ export function PlayerBar() {
             />
             <span className="time">{fmt(dur)}</span>
           </div>
+          {isPlaying && canPlay ? (
+            <div className="player__viz hideMobile">
+              <AudioVisualizer bars={20} height={22} />
+            </div>
+          ) : null}
         </div>
 
         {/* Right controls (desktop) */}
@@ -275,65 +286,34 @@ export function PlayerBar() {
       </div>
 
       {/* Full-screen now playing */}
-      {nowPlayingOpen && now ? (
-        <div className="npSheet" role="dialog" aria-modal="true" aria-label="Now playing">
-          <div className="npSheet__top">
-            <button className="iconBtn ghost" aria-label="Close" onClick={() => setNowPlaying(false)}>
-              <ChevronDownIcon size={24} />
-            </button>
-            <div className="kicker">Now Playing</div>
-            <div style={{ width: 38 }}>{FavBtn}</div>
-          </div>
-
-          <div className="npSheet__body">
-            <div className="npSheet__art">
-              {now.cover_url ? <img src={now.cover_url} alt="" /> : <div className="skeleton" style={{ width: "100%", height: "100%" }} />}
-            </div>
-            <div className="npSheet__meta">
-              <div className="h1 truncate">{now.title}</div>
-              <div className="muted truncate" style={{ marginTop: 6 }}>
-                {now.artist}
-                {now.album ? ` · ${now.album}` : ""}
-              </div>
-            </div>
-
-            <div className="npSheet__controls">
-              <div className="player__seek">
-                <span className="time">{fmt(pos)}</span>
-                <input
-                  className="range"
-                  style={pctStyle(progressPct)}
-                  type="range"
-                  min={0}
-                  max={Math.max(1, dur || 1)}
-                  step={0.25}
-                  value={Math.min(pos, dur || 0)}
-                  disabled={!canPlay}
-                  aria-label="Seek"
-                  onChange={(e) => seek(Number(e.target.value))}
-                />
-                <span className="time">{fmt(dur)}</span>
-              </div>
-              <div className="npSheet__buttons">
-                {ShuffleBtn}
-                <button className="iconBtn ghost" aria-label="Previous" onClick={prev} disabled={!queue.length}>
-                  <PrevIcon size={26} />
-                </button>
-                {PlayBtn(true)}
-                <button className="iconBtn ghost" aria-label="Next" onClick={next} disabled={!queue.length}>
-                  <NextIcon size={26} />
-                </button>
-                {RepeatBtn}
-              </div>
-              {!canPlay && deezerUrl ? (
-                <a className="btn" href={deezerUrl} target="_blank" rel="noreferrer" style={{ alignSelf: "center" }}>
-                  <ExternalIcon size={16} /> Open in Deezer
-                </a>
-              ) : null}
-            </div>
-          </div>
-        </div>
-      ) : null}
+      <AnimatePresence>
+        {nowPlayingOpen && now ? (
+          <NowPlayingSheet
+            track={now}
+            isPlaying={isPlaying}
+            canPlay={canPlay}
+            canFav={canFav}
+            favHas={favHas}
+            pos={pos}
+            dur={dur}
+            progressPct={progressPct}
+            shuffle={shuffle}
+            repeat={repeat}
+            deezerUrl={deezerUrl}
+            onClose={() => setNowPlaying(false)}
+            onTogglePlay={togglePlay}
+            onPrev={prev}
+            onNext={next}
+            onSeek={seek}
+            onToggleFav={() => now && toggleFav(now.ref, now.title)}
+            onToggleShuffle={toggleShuffle}
+            onCycleRepeat={cycleRepeat}
+            queueLen={queue.length}
+            pctStyle={pctStyle}
+            fmt={fmt}
+          />
+        ) : null}
+      </AnimatePresence>
     </>
   );
 }
