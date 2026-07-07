@@ -57,10 +57,10 @@ export function AuthPage() {
       <aside className="authAside">
         <div className="brand">
           <div className="logo">S</div>
-          <div style={{ fontWeight: 900, fontSize: 20, letterSpacing: "-0.03em" }}>Sonoteca</div>
+          <div className="brandName">Sonoteca</div>
         </div>
         <div>
-          <div style={{ fontSize: 44, fontWeight: 900, letterSpacing: "-0.04em", lineHeight: 1.05 }}>
+          <div className="authHeadline">
             Your music,
             <br />
             beautifully organized.
@@ -84,7 +84,7 @@ export function AuthPage() {
         <div className="authCard panel" style={{ padding: 28 }}>
           <div className="brand hideDesktop" style={{ marginBottom: 20 }}>
             <div className="logo">S</div>
-            <div style={{ fontWeight: 900, fontSize: 20 }}>Sonoteca</div>
+            <div className="brandName">Sonoteca</div>
           </div>
 
           <div className="tabs" style={{ marginBottom: 20 }}>

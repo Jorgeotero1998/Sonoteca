@@ -42,7 +42,7 @@ export function TopBar() {
       <button className="iconBtn ghost menuBtn" aria-label="Open menu" onClick={toggleSidebar}>
         <MenuIcon size={20} />
       </button>
-      <div className="row gap2" style={{ flex: "0 0 auto" }}>
+      <div className="topbar__history row gap2">
         <button className="iconBtn" aria-label="Go back" onClick={() => nav(-1)}>
           <ChevronLeftIcon size={20} />
         </button>

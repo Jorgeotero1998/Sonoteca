@@ -52,20 +52,22 @@ export function Layout() {
       <Suspense fallback={null}>
         <AmbientMesh />
       </Suspense>
-      <Sidebar />
-      {sidebarOpen ? <div className="drawerScrim hideDesktop" onClick={() => setSidebar(false)} aria-hidden /> : null}
 
-      <div className="mainCol">
-        <TopBar />
-        <div className="content" ref={contentRef}>
-          <div className="contentInner">
-            <PageTransition />
+      <div className="appShell">
+        <Sidebar />
+        <div className="mainCol">
+          <TopBar />
+          <div className="content" ref={contentRef}>
+            <div className="contentInner">
+              <PageTransition />
+            </div>
           </div>
         </div>
+        <PlayerBar />
+        <MobileNav />
       </div>
 
-      <PlayerBar />
-      <MobileNav />
+      {sidebarOpen ? <div className="drawerScrim hideDesktop" onClick={() => setSidebar(false)} aria-hidden /> : null}
 
       <BackendStatusBanner />
       <Toaster />

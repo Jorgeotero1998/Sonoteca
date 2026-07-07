@@ -12,8 +12,8 @@ export function MobileNav() {
   return (
     <nav className="mobileNav" aria-label="Primary mobile">
       {NAV.map(({ to, label, icon: Icon, end }) => (
-        <NavLink key={to} to={to} end={end} className={({ isActive }) => `navItem${isActive ? " active" : ""}`}>
-          <Icon size={20} />
+        <NavLink key={to} to={to} end={end} className={({ isActive }) => `mobileNav__item navItem${isActive ? " active" : ""}`}>
+          <Icon size={22} />
           <span>{label}</span>
         </NavLink>
       ))}
