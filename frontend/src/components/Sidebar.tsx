@@ -31,8 +31,8 @@ export function Sidebar() {
           <button className="brand" onClick={() => go("/")} style={{ border: "none", background: "none", cursor: "pointer", color: "inherit" }}>
             <div className="logo">S</div>
             <div style={{ textAlign: "left" }}>
-              <div style={{ fontWeight: 900, letterSpacing: "-0.03em" }}>Sonoteca</div>
-              <div className="muted2" style={{ fontSize: 11 }}>Music Library</div>
+              <div className="brandName">Sonoteca</div>
+              <div className="brandTag">Music Library</div>
             </div>
           </button>
           <button className="iconBtn ghost sidebar__mobileClose" aria-label="Close menu" onClick={() => setSidebar(false)}>

@@ -3,7 +3,7 @@ import * as THREE from "three";
 import { useAudioStore } from "../store/audioStore";
 
 function cssAccent(): THREE.Color {
-  const v = getComputedStyle(document.documentElement).getPropertyValue("--acc").trim() || "#1ed760";
+  const v = getComputedStyle(document.documentElement).getPropertyValue("--acc").trim() || "#c084fc";
   return new THREE.Color(v);
 }
 

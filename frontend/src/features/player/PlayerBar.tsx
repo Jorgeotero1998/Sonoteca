@@ -342,7 +342,7 @@ async function dominantColors(url: string): Promise<{ acc: string; acc3: string 
     b += data[i + 2];
     n++;
   }
-  if (!n) return { acc: "#1ed760", acc3: "#6ee7ff" };
+  if (!n) return { acc: "#c084fc", acc3: "#fb7185" };
   const avg = { r: Math.round(r / n), g: Math.round(g / n), b: Math.round(b / n) };
   // Boost saturation/lightness so it works as an accent on dark UI.
   const boosted = boost(avg);

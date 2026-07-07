@@ -131,10 +131,29 @@ export function HomePage() {
 
   return (
     <div className="stack" style={{ gap: 8 }}>
-      <div>
-        <div className="kicker">Deezer catalog · 30s previews</div>
-        <h1 className="h1" style={{ marginTop: 6 }}>{greeting()}</h1>
-      </div>
+      <section className="editorialHero">
+        <div className="editorialHero__copy">
+          <span className="eyebrow">Sonoteca · Deezer catalog</span>
+          <h1 className="display">{greeting()}</h1>
+          <p className="lede">
+            Charts, fresh releases, and your library — every track with a 30-second preview.
+          </p>
+          {playable.length ? (
+            <button
+              className="btnPrimary"
+              style={{ marginTop: 20 }}
+              onClick={() => setQueue(playable, 0)}
+            >
+              <PlayIcon size={16} /> Start listening
+            </button>
+          ) : null}
+        </div>
+        {charts[0]?.cover_url ? (
+          <div className="editorialHero__art" aria-hidden>
+            <img src={charts[0].cover_url} alt="" />
+          </div>
+        ) : null}
+      </section>
 
       <SectionHeader
         title="Top Charts"
