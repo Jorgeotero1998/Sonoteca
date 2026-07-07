@@ -9,7 +9,13 @@
 
 **Live:** [sonoteca-hzbi.vercel.app](https://sonoteca-hzbi.vercel.app/) · **Stack:** React + FastAPI + PostgreSQL (Neon) on Vercel
 
-
+<p align="center">
+  <a href="https://sonoteca-hzbi.vercel.app/">
+    <img src="docs/screenshot.png" width="820" alt="Sonoteca — live app screenshot (Top Charts from Deezer with 30s previews)"/>
+  </a>
+  <br/>
+  <sub><i>Live app — Deezer-powered Top Charts with 30s previews and built-in player.</i></sub>
+</p>
 
 
 
