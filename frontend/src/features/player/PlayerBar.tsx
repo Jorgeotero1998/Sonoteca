@@ -201,21 +201,22 @@ export function PlayerBar() {
         {/* Mobile top progress */}
         <div className="range playerBar__progress" style={{ background: `linear-gradient(90deg, var(--acc) ${progressPct}%, var(--surface-3) ${progressPct}%)`, borderRadius: 0 }} aria-hidden />
 
-        {/* Now playing */}
-        <div className="player__now">
-          <button
-            className="player__cover"
-            aria-label="Open now playing"
-            onClick={() => now && setNowPlaying(true)}
-          >
+        {/* Now playing — tap anywhere on left cluster to expand */}
+        <button
+          type="button"
+          className="player__now"
+          aria-label="Open now playing"
+          onClick={() => now && setNowPlaying(true)}
+          disabled={!now}
+        >
+          <div className="player__cover">
             {now?.cover_url ? <img src={now.cover_url} alt="" /> : <div className="skeleton" style={{ width: "100%", height: "100%" }} />}
-          </button>
-          <div className="truncate" style={{ minWidth: 0 }}>
+          </div>
+          <div className="player__meta">
             <div className="player__title truncate">{now?.title || "Not playing"}</div>
             <div className="player__artist truncate">{now ? now.artist : "Pick a track to start"}</div>
           </div>
-          <span className="hideMobile">{FavBtn}</span>
-        </div>
+        </button>
 
         {/* Center controls (desktop) */}
         <div className="player__center">
@@ -255,6 +256,7 @@ export function PlayerBar() {
 
         {/* Right controls (desktop) */}
         <div className="player__right">
+          {FavBtn}
           {!canPlay && deezerUrl ? (
             <a className="iconBtn ghost" href={deezerUrl} target="_blank" rel="noreferrer" aria-label="Open in Deezer">
               <ExternalIcon size={18} />
@@ -342,7 +344,7 @@ async function dominantColors(url: string): Promise<{ acc: string; acc3: string 
     b += data[i + 2];
     n++;
   }
-  if (!n) return { acc: "#c084fc", acc3: "#fb7185" };
+  if (!n) return { acc: "#d4a574", acc3: "#e8c9a0" };
   const avg = { r: Math.round(r / n), g: Math.round(g / n), b: Math.round(b / n) };
   // Boost saturation/lightness so it works as an accent on dark UI.
   const boosted = boost(avg);

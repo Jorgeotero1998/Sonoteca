@@ -106,17 +106,19 @@ export function NowPlayingSheet({
 
       <div className="npSheet__body">
         <motion.div
-          className="npSheet__art"
-          initial={{ scale: 0.88, opacity: 0 }}
+          className="npSheet__artFrame"
+          initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ type: "spring", stiffness: 260, damping: 24, delay: 0.05 }}
         >
-          {track.cover_url ? <img src={track.cover_url} alt="" /> : <div className="skeleton" style={{ width: "100%", height: "100%" }} />}
+          <div className="npSheet__art">
+            {track.cover_url ? <img src={track.cover_url} alt="" /> : <div className="skeleton" style={{ width: "100%", height: "100%" }} />}
+          </div>
         </motion.div>
 
         <motion.div className="npSheet__meta" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
-          <div className="h1 truncate">{track.title}</div>
-          <div className="muted truncate" style={{ marginTop: 6 }}>
+          <div className="h1 break-safe">{track.title}</div>
+          <div className="muted break-safe" style={{ marginTop: 6 }}>
             {track.artist}
             {track.album ? ` · ${track.album}` : ""}
           </div>

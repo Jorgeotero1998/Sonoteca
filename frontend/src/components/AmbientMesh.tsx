@@ -3,7 +3,7 @@ import * as THREE from "three";
 import { useAudioStore } from "../store/audioStore";
 
 function cssAccent(): THREE.Color {
-  const v = getComputedStyle(document.documentElement).getPropertyValue("--acc").trim() || "#c084fc";
+  const v = getComputedStyle(document.documentElement).getPropertyValue("--acc").trim() || "#d4a574";
   return new THREE.Color(v);
 }
 
@@ -51,7 +51,7 @@ export function AmbientMesh() {
         uTime: { value: 0 },
         uEnergy: { value: 0 },
         uColor: { value: accent },
-        uColor2: { value: new THREE.Color("#0b0c11") },
+        uColor2: { value: new THREE.Color("#0c0a09") },
       },
       vertexShader: `
         uniform float uTime;

@@ -98,7 +98,7 @@ export function AuthPage() {
           </div>
 
           {err ? (
-            <div className="chip" style={{ color: "var(--danger)", borderColor: "rgba(251,113,133,.4)", marginBottom: 16, width: "100%" }}>
+            <div className="chip" style={{ color: "var(--danger)", borderColor: "color-mix(in srgb, var(--danger) 40%, transparent)", marginBottom: 16, width: "100%" }}>
               <AlertIcon size={16} /> <span className="truncate">{err}</span>
             </div>
           ) : null}
