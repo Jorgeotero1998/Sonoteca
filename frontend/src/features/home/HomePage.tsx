@@ -1,8 +1,9 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import { Link } from "react-router-dom";
-import { motion } from "framer-motion";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { sonotecaApi } from "../../services/api/sonotecaApi";
 import { usePlayerStore, type Track } from "../../store/playerStore";
+import { GridSkeleton, MediaCard, SectionHeader, useIsCurrent } from "../../components/media";
+import { PlayIcon } from "../../components/icons";
 
 function asTrack(x: any): Track {
   return {
@@ -17,10 +18,47 @@ function asTrack(x: any): Track {
   };
 }
 
+function greeting() {
+  const h = new Date().getHours();
+  if (h < 12) return "Good morning";
+  if (h < 18) return "Good afternoon";
+  return "Good evening";
+}
+
+function ChartCard({ track, queue }: { track: Track; queue: Track[] }) {
+  const setQueue = usePlayerStore((s) => s.setQueue);
+  const togglePlay = usePlayerStore((s) => s.togglePlay);
+  const nav = useNavigate();
+  const { isCurrent, isPlaying } = useIsCurrent(track.ref);
+  return (
+    <MediaCard
+      title={track.title}
+      subtitle={track.artist}
+      imageUrl={track.cover_url}
+      playing={isPlaying}
+      onOpen={() => nav(`/track/${encodeURIComponent(track.ref)}`)}
+      onPlay={
+        track.preview_url
+          ? () => {
+              if (isCurrent) togglePlay();
+              else {
+                const start = queue.findIndex((t) => t.ref === track.ref);
+                setQueue(queue, start < 0 ? 0 : start);
+              }
+            }
+          : undefined
+      }
+    />
+  );
+}
+
 export function HomePage() {
   const setQueue = usePlayerStore((s) => s.setQueue);
+  const nav = useNavigate();
   const [charts, setCharts] = useState<any[]>([]);
   const [releases, setReleases] = useState<any[]>([]);
+  const [chartsLoading, setChartsLoading] = useState(true);
+  const [relLoading, setRelLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [chartsIndex, setChartsIndex] = useState(0);
   const [relIndex, setRelIndex] = useState(0);
@@ -28,37 +66,42 @@ export function HomePage() {
   const [relMore, setRelMore] = useState(true);
   const chartsSentinel = useRef<HTMLDivElement | null>(null);
   const relSentinel = useRef<HTMLDivElement | null>(null);
-  const tracks = useMemo(() => charts.map(asTrack), [charts]);
 
-  async function loadCharts(reset = false) {
-    if (busy || (!chartsMore && !reset)) return;
-    setBusy(true);
-    try {
-      const index = reset ? 0 : chartsIndex;
-      const out = await sonotecaApi.catalog.charts({ limit: "30", index: String(index) });
-      const items = out.tracks || [];
-      setCharts(reset ? items : [...charts, ...items]);
-      setChartsMore(items.length > 0);
-      setChartsIndex(index + items.length);
-    } finally {
-      setBusy(false);
-    }
-  }
+  const playable = useMemo(() => charts.map(asTrack).filter((t) => t.preview_url), [charts]);
 
-  async function loadReleases(reset = false) {
-    if (busy || (!relMore && !reset)) return;
-    setBusy(true);
-    try {
-      const index = reset ? 0 : relIndex;
-      const out = await sonotecaApi.catalog.newReleases({ limit: "18", index: String(index) });
-      const items = out.items || [];
-      setReleases(reset ? items : [...releases, ...items]);
-      setRelMore(items.length > 0);
-      setRelIndex(index + items.length);
-    } finally {
-      setBusy(false);
-    }
-  }
+  const loadCharts = useCallback(
+    async (reset = false) => {
+      setBusy(true);
+      try {
+        const index = reset ? 0 : chartsIndex;
+        const out = await sonotecaApi.catalog.charts({ limit: "30", index: String(index) });
+        const items = out.tracks || [];
+        setCharts((prev) => (reset ? items : [...prev, ...items]));
+        setChartsMore(items.length > 0);
+        setChartsIndex(index + items.length);
+      } finally {
+        setBusy(false);
+        setChartsLoading(false);
+      }
+    },
+    [chartsIndex]
+  );
+
+  const loadReleases = useCallback(
+    async (reset = false) => {
+      try {
+        const index = reset ? 0 : relIndex;
+        const out = await sonotecaApi.catalog.newReleases({ limit: "24", index: String(index) });
+        const items = out.items || [];
+        setReleases((prev) => (reset ? items : [...prev, ...items]));
+        setRelMore(items.length > 0);
+        setRelIndex(index + items.length);
+      } finally {
+        setRelLoading(false);
+      }
+    },
+    [relIndex]
+  );
 
   useEffect(() => {
     loadCharts(true);
@@ -69,152 +112,64 @@ export function HomePage() {
   useEffect(() => {
     const el = chartsSentinel.current;
     if (!el) return;
-    const io = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting) loadCharts(false);
-      },
-      { rootMargin: "600px 0px" }
-    );
+    const io = new IntersectionObserver((e) => e[0].isIntersecting && chartsMore && !busy && loadCharts(false), { rootMargin: "600px 0px" });
     io.observe(el);
     return () => io.disconnect();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [chartsIndex, chartsMore, busy]);
+  }, [chartsMore, busy, loadCharts]);
 
   useEffect(() => {
     const el = relSentinel.current;
     if (!el) return;
-    const io = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting) loadReleases(false);
-      },
-      { rootMargin: "600px 0px" }
-    );
+    const io = new IntersectionObserver((e) => e[0].isIntersecting && relMore && loadReleases(false), { rootMargin: "600px 0px" });
     io.observe(el);
     return () => io.disconnect();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [relIndex, relMore, busy]);
+  }, [relMore, loadReleases]);
 
   return (
-    <div className="page">
-      <header className="topbar glass">
-        <div className="brand">
-          <div className="logo">S</div>
-          <div>
-            <div className="title">Sonoteca</div>
-            <div className="subtitle">Deezer-first music explorer</div>
-          </div>
-        </div>
-        <nav className="nav">
-          <Link className="btn" to="/search">Search</Link>
-          <Link className="btn" to="/library">Library</Link>
-          <Link className="btn" to="/playlists">Playlists</Link>
-        </nav>
-      </header>
+    <div className="stack" style={{ gap: 8 }}>
+      <div>
+        <div className="kicker">Deezer catalog · 30s previews</div>
+        <h1 className="h1" style={{ marginTop: 6 }}>{greeting()}</h1>
+      </div>
 
-      <section className="section">
-        <div className="sectionTitle">
-          <div>
-            <div className="h1">Top Charts</div>
-            <div className="kicker">Real-time charts from Deezer · previews 30s</div>
-          </div>
-          <button className="btn" onClick={() => setQueue(tracks, 0)} disabled={!tracks.length}>
-            Play charts
+      <SectionHeader
+        title="Top Charts"
+        subtitle="What the world is listening to right now"
+        action={
+          <button className="btnPrimary" onClick={() => setQueue(playable, 0)} disabled={!playable.length}>
+            <PlayIcon size={16} /> Play all
           </button>
-        </div>
-
+        }
+      />
+      {chartsLoading ? (
+        <GridSkeleton count={12} />
+      ) : (
         <div className="grid">
-          {(tracks.length ? tracks : Array.from({ length: 12 })).map((t: any, i: number) => (
-            <motion.div
-              key={t?.ref || i}
-              className="card glass hover"
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.25, delay: i * 0.02 }}
-            >
-              <div className="cover">
-                {t?.cover_url ? <img src={t.cover_url} alt="" /> : <div className="skeleton" />}
-              </div>
-              <div className="meta">
-                <div className="name">{t?.title || "Loading…"}</div>
-                <div className="muted">{t?.artist || "—"}</div>
-              </div>
-              <div className="row">
-                <Link className="btn" to={`/track/${encodeURIComponent(t?.ref || "")}`} aria-disabled={!t?.ref}>
-                  Open
-                </Link>
-                {t?.preview_url ? (
-                  <button className="btnPrimary" onClick={() => setQueue([t], 0)}>
-                    Play
-                  </button>
-                ) : t?.external_urls?.deezer ? (
-                  <a className="btn" href={t.external_urls.deezer} target="_blank" rel="noreferrer">
-                    Open Deezer
-                  </a>
-                ) : (
-                  <button className="btn" disabled>
-                    No preview
-                  </button>
-                )}
-              </div>
-            </motion.div>
+          {charts.map((c) => (
+            <ChartCard key={c.ref} track={asTrack(c)} queue={playable} />
           ))}
         </div>
-        <div ref={chartsSentinel} style={{ height: 1 }} />
-        <div style={{ marginTop: 12, marginLeft: 6, display: "flex", gap: 10, alignItems: "center" }}>
-          <button className="btn" onClick={() => loadCharts(false)} disabled={busy || !chartsMore}>
-            Load more
-          </button>
-          {busy ? <span className="muted">Loading…</span> : chartsMore ? <span className="muted">Auto-load on scroll</span> : <span className="muted">End</span>}
-        </div>
-      </section>
+      )}
+      <div ref={chartsSentinel} style={{ height: 1 }} />
 
-      <section className="section">
-        <div className="sectionTitle">
-          <div>
-            <div className="h2">New Releases</div>
-            <div className="kicker">Editorial releases from Deezer</div>
-          </div>
-        </div>
-
+      <SectionHeader title="New Releases" subtitle="Fresh albums picked by Deezer editors" />
+      {relLoading ? (
+        <GridSkeleton count={12} />
+      ) : (
         <div className="grid">
-          {(releases.length ? releases : Array.from({ length: 12 })).map((a: any, i: number) => (
-            <motion.div
-              key={a?.ref || i}
-              className="card glass hover"
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.25, delay: i * 0.01 }}
-            >
-              <div className="cover">
-                {a?.cover_url ? <img src={a.cover_url} alt="" /> : <div className="skeleton" />}
-              </div>
-              <div className="meta">
-                <div className="name">{a?.title || "Loading…"}</div>
-                <div className="muted">{a?.artist || "—"}</div>
-              </div>
-              {a?.ref ? (
-                <Link className="btnPrimary" to={`/album/${encodeURIComponent(a.ref)}`}>
-                  View album
-                </Link>
-              ) : (
-                <button className="btnPrimary" disabled>
-                  View album
-                </button>
-              )}
-            </motion.div>
+          {releases.map((a) => (
+            <MediaCard
+              key={a.ref}
+              title={a.title}
+              subtitle={a.artist}
+              imageUrl={a.cover_url}
+              onOpen={() => nav(`/album/${encodeURIComponent(a.ref)}`)}
+            />
           ))}
         </div>
-        <div ref={relSentinel} style={{ height: 1 }} />
-        <div style={{ marginTop: 12, marginLeft: 6, display: "flex", gap: 10, alignItems: "center" }}>
-          <button className="btn" onClick={() => loadReleases(false)} disabled={busy || !relMore}>
-            Load more
-          </button>
-          {busy ? <span className="muted">Loading…</span> : relMore ? <span className="muted">Auto-load on scroll</span> : <span className="muted">End</span>}
-        </div>
-      </section>
-
-      {busy ? null : null}
+      )}
+      <div ref={relSentinel} style={{ height: 1 }} />
+      {busy || relLoading ? <div className="muted2" style={{ padding: "16px 4px", fontSize: 13 }}>Loading more…</div> : null}
     </div>
   );
 }
-

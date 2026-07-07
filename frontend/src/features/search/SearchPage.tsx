@@ -1,7 +1,9 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { sonotecaApi } from "../../services/api/sonotecaApi";
 import { usePlayerStore, type Track } from "../../store/playerStore";
+import { EmptyState, GridSkeleton, MediaCard, RowSkeleton, SectionHeader, TrackRow } from "../../components/media";
+import { PlayIcon, SearchIcon } from "../../components/icons";
 
 type Tab = "track" | "artist" | "album";
 
@@ -20,7 +22,10 @@ function asTrack(x: any): Track {
 
 export function SearchPage() {
   const [sp, setSp] = useSearchParams();
+  const nav = useNavigate();
   const setQueue = usePlayerStore((s) => s.setQueue);
+  const togglePlay = usePlayerStore((s) => s.togglePlay);
+  const curRef = usePlayerStore((s) => s.queue[s.idx]?.ref);
   const q = sp.get("q") || "";
   const tab = (sp.get("tab") as Tab) || "track";
   const [items, setItems] = useState<any[]>([]);
@@ -28,31 +33,28 @@ export function SearchPage() {
   const [hasMore, setHasMore] = useState(true);
   const sentinelRef = useRef<HTMLDivElement | null>(null);
 
-  const tracks = useMemo(() => items.map(asTrack), [items]);
+  const tracks = useMemo(() => items.map(asTrack).filter((t) => t.preview_url), [items]);
 
-  async function run(reset = false) {
-    if (!q.trim()) {
-      setItems([]);
-      setHasMore(false);
-      return;
-    }
-    setBusy(true);
-    try {
-      const index = reset ? 0 : items.length;
-      const out = await sonotecaApi.catalog.search({
-        q: q.trim(),
-        type: tab,
-        limit: "30",
-        index: String(index),
-        provider: "deezer",
-      });
-      const next = out.items || [];
-      setItems(reset ? next : [...items, ...next]);
-      setHasMore(next.length > 0);
-    } finally {
-      setBusy(false);
-    }
-  }
+  const run = useCallback(
+    async (reset = false) => {
+      if (!q.trim()) {
+        setItems([]);
+        setHasMore(false);
+        return;
+      }
+      setBusy(true);
+      try {
+        const index = reset ? 0 : items.length;
+        const out = await sonotecaApi.catalog.search({ q: q.trim(), type: tab, limit: "30", index: String(index), provider: "deezer" });
+        const next = out.items || [];
+        setItems((prev) => (reset ? next : [...prev, ...next]));
+        setHasMore(next.length > 0);
+      } finally {
+        setBusy(false);
+      }
+    },
+    [q, tab, items.length]
+  );
 
   useEffect(() => {
     setItems([]);
@@ -64,109 +66,88 @@ export function SearchPage() {
   useEffect(() => {
     const el = sentinelRef.current;
     if (!el) return;
-    const io = new IntersectionObserver(
-      (entries) => {
-        const e = entries[0];
-        if (e.isIntersecting && !busy && hasMore && q.trim()) run(false);
-      },
-      { rootMargin: "600px 0px" }
-    );
+    const io = new IntersectionObserver((e) => e[0].isIntersecting && !busy && hasMore && q.trim() && run(false), { rootMargin: "600px 0px" });
     io.observe(el);
     return () => io.disconnect();
-  }, [busy, hasMore, q]);
+  }, [busy, hasMore, q, run]);
+
+  function playTrack(t: Track) {
+    if (t.ref === curRef) return togglePlay();
+    const start = tracks.findIndex((x) => x.ref === t.ref);
+    setQueue(tracks, start < 0 ? 0 : start);
+  }
+
+  function setTab(t: Tab) {
+    sp.set("tab", t);
+    setSp(sp, { replace: true });
+  }
+
+  const empty = !busy && items.length === 0;
 
   return (
-    <div className="page">
-      <header className="topbar glass">
-        <div className="brand">
-          <div className="logo">S</div>
-          <div>
-            <div className="title">Search</div>
-            <div className="subtitle">Deezer catalog · previews</div>
-          </div>
-        </div>
-        <nav className="nav">
-          <Link className="btn" to="/">Home</Link>
-          <Link className="btn" to="/library">Library</Link>
-          <Link className="btn" to="/playlists">Playlists</Link>
-        </nav>
-      </header>
-
-      <section className="section">
-        <div className="glass card" style={{ padding: 14 }}>
-          <input
-            className="input"
-            value={q}
-            placeholder="Search tracks, artists, albums…"
-            onChange={(e) => {
-              sp.set("q", e.target.value);
-              setSp(sp, { replace: true });
-            }}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") run();
-            }}
-          />
-          <div style={{ height: 10 }} />
-          <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-            {(["track", "artist", "album"] as Tab[]).map((t) => (
-              <button
-                key={t}
-                className={tab === t ? "btn btnPrimary" : "btn"}
-                onClick={() => {
-                  sp.set("tab", t);
-                  setSp(sp, { replace: true });
-                }}
-              >
-                {t === "track" ? "Tracks" : t === "artist" ? "Artists" : "Albums"}
-              </button>
-            ))}
-            {tab === "track" ? (
-              <button className="btn" onClick={() => setQueue(tracks, 0)} disabled={!tracks.length}>
-                Play results
-              </button>
-            ) : null}
-          </div>
-        </div>
-      </section>
-
-      <section className="section">
-        <div className="grid">
-          {(items.length ? items : busy ? Array.from({ length: 12 }) : []).map((x: any, i: number) => (
-            <div key={x?.ref || i} className="card glass hover">
-              <div className="cover">{x?.cover_url || x?.image_url ? <img src={x.cover_url || x.image_url} alt="" /> : <div className="skeleton" />}</div>
-              <div className="meta">
-                <div className="name">{x?.title || x?.name || "Loading…"}</div>
-                <div className="muted">{x?.artist || ""}</div>
-              </div>
-              <div className="row">
-                {tab === "track" ? (
-                  <>
-                    <Link className="btn" to={`/track/${encodeURIComponent(x?.ref || "")}`}>Open</Link>
-                    {x?.preview_url ? (
-                      <button className="btnPrimary" onClick={() => setQueue([asTrack(x)], 0)}>Play</button>
-                    ) : x?.external_urls?.deezer ? (
-                      <a className="btn" href={x.external_urls.deezer} target="_blank" rel="noreferrer">Open Deezer</a>
-                    ) : (
-                      <button className="btn" disabled>No preview</button>
-                    )}
-                  </>
-                ) : tab === "album" ? (
-                  <Link className="btnPrimary" to={`/album/${encodeURIComponent(x?.ref || "")}`}>View album</Link>
-                ) : (
-                  <Link className="btnPrimary" to={`/artist/${encodeURIComponent(x?.ref || "")}`}>View artist</Link>
-                )}
-              </div>
-            </div>
+    <div className="stack" style={{ gap: 8 }}>
+      <div className="rowBetween wrap" style={{ gap: 12 }}>
+        <div className="tabs">
+          {(["track", "artist", "album"] as Tab[]).map((t) => (
+            <button key={t} className={`tab${tab === t ? " active" : ""}`} onClick={() => setTab(t)}>
+              {t === "track" ? "Songs" : t === "artist" ? "Artists" : "Albums"}
+            </button>
           ))}
         </div>
-        <div ref={sentinelRef} style={{ height: 1 }} />
-        <div style={{ marginTop: 12, marginLeft: 6 }}>
-          {busy ? <span className="muted">Loading…</span> : hasMore && q.trim() ? <span className="muted">Scroll to load more</span> : null}
-        </div>
-      </section>
+        {tab === "track" && tracks.length ? (
+          <button className="btnPrimary" onClick={() => setQueue(tracks, 0)}>
+            <PlayIcon size={16} /> Play results
+          </button>
+        ) : null}
+      </div>
 
-      <div style={{ height: 96 }} />
+      {!q.trim() ? (
+        <EmptyState icon={<SearchIcon size={28} />} title="Search Sonoteca" hint="Find songs, artists, and albums from the Deezer catalog. Try “Daft Punk” or “lofi”." />
+      ) : busy && items.length === 0 ? (
+        tab === "track" ? (
+          <RowSkeleton count={10} />
+        ) : (
+          <GridSkeleton count={12} round={tab === "artist"} />
+        )
+      ) : empty ? (
+        <EmptyState icon={<SearchIcon size={28} />} title={`No results for “${q}”`} hint="Try a different spelling or search another category." />
+      ) : tab === "track" ? (
+        <>
+          <SectionHeader title={`Songs`} subtitle={`Results for “${q}”`} />
+          <div className="stack" style={{ gap: 2 }}>
+            {items.map((x, i) => {
+              const t = asTrack(x);
+              return (
+                <TrackRow
+                  key={t.ref}
+                  track={t}
+                  index={i}
+                  onPlay={() => (t.preview_url ? playTrack(t) : window.open(t.external_urls?.deezer || `https://www.deezer.com/track/${t.ref.split(":")[1]}`, "_blank"))}
+                />
+              );
+            })}
+          </div>
+        </>
+      ) : (
+        <>
+          <SectionHeader title={tab === "artist" ? "Artists" : "Albums"} subtitle={`Results for “${q}”`} />
+          <div className="grid">
+            {items.map((x) => (
+              <MediaCard
+                key={x.ref}
+                title={x.title || x.name}
+                subtitle={tab === "album" ? x.artist : undefined}
+                imageUrl={x.cover_url || x.image_url}
+                round={tab === "artist"}
+                onOpen={() => nav(`/${tab}/${encodeURIComponent(x.ref)}`)}
+              />
+            ))}
+          </div>
+        </>
+      )}
+
+      <div ref={sentinelRef} style={{ height: 1 }} />
+      {busy && items.length > 0 ? <div className="muted2" style={{ padding: "12px 4px", fontSize: 13 }}>Loading more…</div> : null}
     </div>
   );
 }
-
