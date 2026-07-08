@@ -51,7 +51,19 @@ export function PlayerBar() {
   const canPlay = Boolean(now?.preview_url);
   const canFav = Boolean(now?.ref?.startsWith("deezer:"));
 
+  // Optional visualizer tap — must not block native preview playback.
   useAudioAnalyser(audioRef, isPlaying && canPlay);
+
+  /** Resume Web Audio + start element playback inside the user-gesture call stack. */
+  const playFromGesture = () => {
+    resumeAudioContext();
+    togglePlay();
+    const el = audioRef.current;
+    if (!el || !canPlay) return;
+    const start = () => el.play().catch(() => {});
+    if (el.readyState >= HTMLMediaElement.HAVE_FUTURE_DATA) start();
+    else el.addEventListener("canplay", start, { once: true });
+  };
 
   useEffect(() => {
     const url = now?.cover_url;
@@ -146,7 +158,9 @@ export function PlayerBar() {
       if (tag === "input" || tag === "textarea" || (e.target as HTMLElement)?.isContentEditable) return;
       if (e.code === "Space") {
         e.preventDefault();
-        if (canPlay) togglePlay();
+        if (!canPlay) return;
+        if (isPlaying) togglePlay();
+        else playFromGesture();
       } else if (e.code === "ArrowRight" && e.shiftKey) {
         next();
       } else if (e.code === "ArrowLeft" && e.shiftKey) {
@@ -157,7 +171,7 @@ export function PlayerBar() {
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [canPlay, next, prev, togglePlay, nowPlayingOpen, setNowPlaying]);
+  }, [canPlay, isPlaying, next, prev, togglePlay, nowPlayingOpen, setNowPlaying]);
 
   const deezerUrl = now?.ref?.startsWith("deezer:") ? `https://www.deezer.com/track/${now.ref.split(":")[1]}` : now?.external_urls?.deezer || null;
 
@@ -202,7 +216,7 @@ export function PlayerBar() {
     <button
       className={big ? "npSheet__playBtn" : "playerDock__play"}
       aria-label={isPlaying ? "Pause" : "Play"}
-      onClick={togglePlay}
+      onClick={() => (isPlaying ? togglePlay() : playFromGesture())}
       disabled={!canPlay}
     >
       {isPlaying ? <PauseIcon size={big ? 30 : 20} /> : <PlayIcon size={big ? 30 : 20} />}
@@ -212,7 +226,7 @@ export function PlayerBar() {
   return (
     <>
       <div className="playerDock">
-        <audio ref={audioRef} preload="metadata" />
+        <audio ref={audioRef} preload="metadata" crossOrigin="anonymous" />
 
         <div className="playerDock__progress" style={{ ["--progress" as string]: `${progressPct}%` }} aria-hidden />
 
@@ -318,7 +332,7 @@ export function PlayerBar() {
             repeat={repeat}
             deezerUrl={deezerUrl}
             onClose={() => setNowPlaying(false)}
-            onTogglePlay={togglePlay}
+            onTogglePlay={() => (isPlaying ? togglePlay() : playFromGesture())}
             onPrev={prev}
             onNext={next}
             onSeek={seek}

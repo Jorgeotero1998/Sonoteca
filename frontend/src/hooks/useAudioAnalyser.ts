@@ -7,8 +7,9 @@ function prefersReducedMotion() {
 }
 
 /**
- * Connects an <audio> element to a Web Audio AnalyserNode and publishes
- * frequency data into audioStore for visualizers / mesh reactivity.
+ * Taps an <audio> element for visualizer data via Web Audio.
+ * Playback stays on the media element; we only connect when CORS allows it
+ * (crossOrigin="anonymous" + Deezer CDN ACAO) so previews are not silenced.
  */
 export function useAudioAnalyser(audioRef: React.RefObject<HTMLAudioElement | null>, isPlaying: boolean) {
   const analyserRef = useRef<AnalyserNode | null>(null);
@@ -19,22 +20,25 @@ export function useAudioAnalyser(audioRef: React.RefObject<HTMLAudioElement | nu
     const el = audioRef.current;
     if (!el || connectedRef.current) return;
 
+    // Required before createMediaElementSource on cross-origin Deezer previews.
+    el.crossOrigin = "anonymous";
+
     try {
       const ctx = getAudioContext();
       const analyser = ctx.createAnalyser();
       analyser.fftSize = 64;
       analyser.smoothingTimeConstant = 0.82;
       const source = ctx.createMediaElementSource(el);
+      // Tap analyser in parallel — do not route playback only through analyser.
+      source.connect(ctx.destination);
       source.connect(analyser);
-      analyser.connect(ctx.destination);
       analyserRef.current = analyser;
       connectedRef.current = true;
     } catch {
-      /* already connected or unsupported */
+      // Element already wired or Web Audio unavailable — native playback still works.
     }
   }, [audioRef]);
 
-  // Resume AudioContext during the user gesture (capture phase), before React effects run play().
   useEffect(() => {
     const onGesture = () => resumeAudioContext();
     document.addEventListener("pointerdown", onGesture, true);
@@ -56,7 +60,6 @@ export function useAudioAnalyser(audioRef: React.RefObject<HTMLAudioElement | nu
     }
 
     const analyser = analyserRef.current;
-    const ctx = getAudioContext();
     if (!analyser) return;
 
     resumeAudioContext();
