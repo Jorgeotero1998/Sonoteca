@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { resumeAudioContext } from "../lib/audioContext";
 
 export type RepeatMode = "off" | "one" | "all";
 
@@ -44,9 +45,18 @@ export const usePlayerStore = create<PlayerState>()(
       shuffle: false,
       repeat: "off",
       compact: false,
-      setQueue: (q, startIdx = 0) => set({ queue: q, idx: Math.max(0, startIdx), isPlaying: true }),
-      playAt: (i) => set({ idx: i, isPlaying: true }),
-      togglePlay: () => set({ isPlaying: !get().isPlaying }),
+      setQueue: (q, startIdx = 0) => {
+        resumeAudioContext();
+        set({ queue: q, idx: Math.max(0, startIdx), isPlaying: true });
+      },
+      playAt: (i) => {
+        resumeAudioContext();
+        set({ idx: i, isPlaying: true });
+      },
+      togglePlay: () => {
+        resumeAudioContext();
+        set({ isPlaying: !get().isPlaying });
+      },
       next: () => {
         const s = get();
         const n = s.queue.length;

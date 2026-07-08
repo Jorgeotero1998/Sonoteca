@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { getAudioContext, resumeAudioContext } from "../lib/audioContext";
 import { useAudioStore } from "../store/audioStore";
 
 function prefersReducedMotion() {
@@ -10,7 +11,6 @@ function prefersReducedMotion() {
  * frequency data into audioStore for visualizers / mesh reactivity.
  */
 export function useAudioAnalyser(audioRef: React.RefObject<HTMLAudioElement | null>, isPlaying: boolean) {
-  const ctxRef = useRef<AudioContext | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
   const connectedRef = useRef(false);
   const rafRef = useRef<number>(0);
@@ -20,20 +20,30 @@ export function useAudioAnalyser(audioRef: React.RefObject<HTMLAudioElement | nu
     if (!el || connectedRef.current) return;
 
     try {
-      const ctx = new AudioContext();
+      const ctx = getAudioContext();
       const analyser = ctx.createAnalyser();
       analyser.fftSize = 64;
       analyser.smoothingTimeConstant = 0.82;
       const source = ctx.createMediaElementSource(el);
       source.connect(analyser);
       analyser.connect(ctx.destination);
-      ctxRef.current = ctx;
       analyserRef.current = analyser;
       connectedRef.current = true;
     } catch {
       /* already connected or unsupported */
     }
   }, [audioRef]);
+
+  // Resume AudioContext during the user gesture (capture phase), before React effects run play().
+  useEffect(() => {
+    const onGesture = () => resumeAudioContext();
+    document.addEventListener("pointerdown", onGesture, true);
+    document.addEventListener("keydown", onGesture, true);
+    return () => {
+      document.removeEventListener("pointerdown", onGesture, true);
+      document.removeEventListener("keydown", onGesture, true);
+    };
+  }, []);
 
   useEffect(() => {
     const setAnalysis = useAudioStore.getState().setAnalysis;
@@ -46,10 +56,10 @@ export function useAudioAnalyser(audioRef: React.RefObject<HTMLAudioElement | nu
     }
 
     const analyser = analyserRef.current;
-    const ctx = ctxRef.current;
-    if (!analyser || !ctx) return;
+    const ctx = getAudioContext();
+    if (!analyser) return;
 
-    if (ctx.state === "suspended") ctx.resume().catch(() => {});
+    resumeAudioContext();
 
     const buf = new Uint8Array(analyser.frequencyBinCount);
 

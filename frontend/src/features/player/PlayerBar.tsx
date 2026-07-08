@@ -6,6 +6,7 @@ import { usePlayerStore } from "../../store/playerStore";
 import { useUIStore } from "../../store/uiStore";
 import { useFavoritesStore } from "../../store/favoritesStore";
 import { useAudioAnalyser } from "../../hooks/useAudioAnalyser";
+import { resumeAudioContext } from "../../lib/audioContext";
 import { NowPlayingSheet } from "../../components/motion";
 import { AudioVisualizer } from "../../components/AudioVisualizer";
 import {
@@ -85,14 +86,29 @@ export function PlayerBar() {
     setDur(0);
     if (!src) {
       el.removeAttribute("src");
+      el.pause();
       return;
     }
-    if (el.src !== src) {
+    const current = el.getAttribute("src") || "";
+    if (current !== src) {
       el.src = src;
       el.load();
     }
-    if (isPlaying) el.play().catch(() => {});
-    else el.pause();
+    if (!isPlaying) {
+      el.pause();
+      return;
+    }
+
+    resumeAudioContext();
+    const playWhenReady = () => {
+      resumeAudioContext();
+      el.play().catch(() => {});
+    };
+    if (el.readyState >= HTMLMediaElement.HAVE_FUTURE_DATA) playWhenReady();
+    else {
+      el.addEventListener("canplay", playWhenReady, { once: true });
+      return () => el.removeEventListener("canplay", playWhenReady);
+    }
   }, [src, isPlaying]);
 
   useEffect(() => {
@@ -212,7 +228,9 @@ export function PlayerBar() {
           </div>
           <div className="playerDock__meta">
             <div className="playerDock__title truncate">{now?.title || "Not playing"}</div>
-            <div className="playerDock__artist truncate">{now ? now.artist : "Pick a track to start"}</div>
+            <div className="playerDock__artist truncate">
+              {now ? (canPlay ? now.artist : `${now.artist} · No preview available`) : "Pick a track to start"}
+            </div>
           </div>
         </button>
 
