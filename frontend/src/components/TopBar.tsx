@@ -38,26 +38,28 @@ export function TopBar() {
   }
 
   return (
-    <header className="topbar">
-      <button className="iconBtn ghost menuBtn" aria-label="Open menu" onClick={toggleSidebar}>
-        <MenuIcon size={20} />
-      </button>
-      <div className="topbar__history row gap2">
-        <button className="iconBtn" aria-label="Go back" onClick={() => nav(-1)}>
-          <ChevronLeftIcon size={20} />
+    <header className="header">
+      <div className="header__left">
+        <button className="iconBtn ghost header__menu hideDesktop" aria-label="Open menu" onClick={toggleSidebar}>
+          <MenuIcon size={20} />
         </button>
-        <button className="iconBtn" aria-label="Go forward" onClick={() => nav(1)}>
-          <ChevronRightIcon size={20} />
-        </button>
+        <div className="header__nav">
+          <button className="iconBtn ghost" aria-label="Go back" onClick={() => nav(-1)}>
+            <ChevronLeftIcon size={18} />
+          </button>
+          <button className="iconBtn ghost" aria-label="Go forward" onClick={() => nav(1)}>
+            <ChevronRightIcon size={18} />
+          </button>
+        </div>
       </div>
 
-      <div className="topbar__search">
-        <SearchIcon size={18} />
+      <div className="header__search">
+        <SearchIcon size={17} />
         <input
-          className="input pill"
+          className="searchInput"
           type="search"
           value={q}
-          placeholder="Search songs, artists, albums…"
+          placeholder="Artists, songs, albums…"
           aria-label="Search"
           onChange={(e) => {
             setQ(e.target.value);
@@ -69,16 +71,18 @@ export function TopBar() {
         />
       </div>
 
-      <div className="topbar__spacer" />
-
-      {token ? (
-        <button className="btn" onClick={doLogout} title="Log out">
-          <LogoutIcon size={16} />
-          <span className="hideMobile">Log out</span>
-        </button>
-      ) : (
-        <button className="btnPrimary" onClick={() => nav("/auth")}>Sign in</button>
-      )}
+      <div className="header__right">
+        {token ? (
+          <button className="btn btn--ghost" onClick={doLogout} title="Log out">
+            <LogoutIcon size={16} />
+            <span className="hideMobile">Log out</span>
+          </button>
+        ) : (
+          <button className="btn btn--primary" onClick={() => nav("/auth")}>
+            Sign in
+          </button>
+        )}
+      </div>
     </header>
   );
 }

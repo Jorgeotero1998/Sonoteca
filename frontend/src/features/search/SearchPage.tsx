@@ -86,7 +86,7 @@ export function SearchPage() {
 
   return (
     <div className="stack" style={{ gap: 8 }}>
-      <div className="rowBetween wrap" style={{ gap: 12 }}>
+      <div className="searchToolbar rowBetween wrap">
         <div className="tabs">
           {(["track", "artist", "album"] as Tab[]).map((t) => (
             <button key={t} className={`tab${tab === t ? " active" : ""}`} onClick={() => setTab(t)}>

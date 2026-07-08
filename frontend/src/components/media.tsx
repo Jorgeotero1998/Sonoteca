@@ -177,7 +177,7 @@ export function SectionHeader({ title, subtitle, action }: { title: string; subt
         <div className="h2">{title}</div>
         {subtitle ? <div className="subtitle" style={{ marginTop: 4 }}>{subtitle}</div> : null}
       </div>
-      {action}
+      {action ? <div className="sectionTitle__action">{action}</div> : null}
     </div>
   );
 }

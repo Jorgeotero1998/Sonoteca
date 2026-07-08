@@ -184,7 +184,7 @@ export function PlayerBar() {
 
   const PlayBtn = (big?: boolean) => (
     <button
-      className={big ? "npSheet__playBtn" : "player__playBtn"}
+      className={big ? "npSheet__playBtn" : "playerDock__play"}
       aria-label={isPlaying ? "Pause" : "Play"}
       onClick={togglePlay}
       disabled={!canPlay}
@@ -195,32 +195,29 @@ export function PlayerBar() {
 
   return (
     <>
-      <div className="playerBar">
+      <div className="playerDock">
         <audio ref={audioRef} preload="metadata" />
 
-        {/* Mobile top progress */}
-        <div className="range playerBar__progress" style={{ background: `linear-gradient(90deg, var(--acc) ${progressPct}%, var(--surface-3) ${progressPct}%)`, borderRadius: 0 }} aria-hidden />
+        <div className="playerDock__progress" style={{ ["--progress" as string]: `${progressPct}%` }} aria-hidden />
 
-        {/* Now playing — tap anywhere on left cluster to expand */}
         <button
           type="button"
-          className="player__now"
+          className="playerDock__track"
           aria-label="Open now playing"
           onClick={() => now && setNowPlaying(true)}
           disabled={!now}
         >
-          <div className="player__cover">
+          <div className="playerDock__cover">
             {now?.cover_url ? <img src={now.cover_url} alt="" /> : <div className="skeleton" style={{ width: "100%", height: "100%" }} />}
           </div>
-          <div className="player__meta">
-            <div className="player__title truncate">{now?.title || "Not playing"}</div>
-            <div className="player__artist truncate">{now ? now.artist : "Pick a track to start"}</div>
+          <div className="playerDock__meta">
+            <div className="playerDock__title truncate">{now?.title || "Not playing"}</div>
+            <div className="playerDock__artist truncate">{now ? now.artist : "Pick a track to start"}</div>
           </div>
         </button>
 
-        {/* Center controls (desktop) */}
-        <div className="player__center">
-          <div className="player__controls">
+        <div className="playerDock__center">
+          <div className="playerDock__controls">
             {ShuffleBtn}
             <button className="iconBtn ghost" aria-label="Previous" onClick={prev} disabled={!queue.length}>
               <PrevIcon size={20} />
@@ -231,7 +228,7 @@ export function PlayerBar() {
             </button>
             {RepeatBtn}
           </div>
-          <div className="player__seek">
+          <div className="playerDock__seek">
             <span className="time">{fmt(pos)}</span>
             <input
               className="range"
@@ -248,21 +245,21 @@ export function PlayerBar() {
             <span className="time">{fmt(dur)}</span>
           </div>
           {isPlaying && canPlay ? (
-            <div className="player__viz hideMobile">
+            <div className="playerDock__viz hideMobile">
               <AudioVisualizer bars={20} height={22} />
             </div>
           ) : null}
         </div>
 
         {/* Right controls (desktop) */}
-        <div className="player__right">
+        <div className="playerDock__right">
           {FavBtn}
           {!canPlay && deezerUrl ? (
             <a className="iconBtn ghost" href={deezerUrl} target="_blank" rel="noreferrer" aria-label="Open in Deezer">
               <ExternalIcon size={18} />
             </a>
           ) : null}
-          <div className="player__volume">
+          <div className="playerDock__volume">
             <button className="iconBtn ghost" aria-label={vol === 0 ? "Unmute" : "Mute"} onClick={() => setVol(vol === 0 ? 0.85 : 0)}>
               {vol === 0 ? <VolumeMuteIcon size={18} /> : <VolumeIcon size={18} />}
             </button>
@@ -281,7 +278,7 @@ export function PlayerBar() {
         </div>
 
         {/* Mobile controls */}
-        <div className="player__mobileControls">
+        <div className="playerDock__mobile">
           {FavBtn}
           {PlayBtn()}
         </div>
@@ -344,7 +341,7 @@ async function dominantColors(url: string): Promise<{ acc: string; acc3: string 
     b += data[i + 2];
     n++;
   }
-  if (!n) return { acc: "#d4a574", acc3: "#e8c9a0" };
+  if (!n) return { acc: "#a855f7", acc3: "#c084fc" };
   const avg = { r: Math.round(r / n), g: Math.round(g / n), b: Math.round(b / n) };
   // Boost saturation/lightness so it works as an accent on dark UI.
   const boosted = boost(avg);

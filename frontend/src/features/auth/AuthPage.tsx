@@ -70,9 +70,9 @@ export function AuthPage() {
           </div>
           <div className="stack gap3" style={{ marginTop: 28 }}>
             {FEATURES.map((f, i) => (
-              <div key={i} className="row gap3">
-                <div style={{ width: 36, height: 36, borderRadius: 12, display: "grid", placeItems: "center", background: "rgba(255,255,255,.08)", color: "var(--acc)" }}>{f.icon}</div>
-                <span style={{ fontWeight: 600 }}>{f.text}</span>
+              <div key={i} className="authFeature">
+                <div className="authFeature__icon">{f.icon}</div>
+                <span className="authFeature__text">{f.text}</span>
               </div>
             ))}
           </div>
@@ -82,9 +82,12 @@ export function AuthPage() {
 
       <main className="authMain">
         <div className="authCard panel" style={{ padding: 28 }}>
-          <div className="brand hideDesktop" style={{ marginBottom: 20 }}>
+          <div className="brand hideDesktop authMobileBrand">
             <div className="logo">S</div>
-            <div className="brandName">Sonoteca</div>
+            <div>
+              <div className="brandName">Sonoteca</div>
+              <div className="brandTag">Music Library</div>
+            </div>
           </div>
 
           <div className="tabs" style={{ marginBottom: 20 }}>
@@ -127,12 +130,12 @@ export function AuthPage() {
             </button>
           </form>
 
-          <div className="row gap2" style={{ marginTop: 18, fontSize: 12 }}>
+          <div className="row gap2 wrap" style={{ marginTop: 18, fontSize: 12 }}>
             <span className="chip" style={{ padding: "4px 10px" }}>
-              <span style={{ width: 8, height: 8, borderRadius: 999, background: health === "up" ? "var(--acc)" : health === "down" ? "var(--danger)" : "var(--muted-2)" }} />
+              <span className={`statusDot${health === "up" ? " statusDot--ok" : health === "down" ? " statusDot--err" : ""}`} />
               API {health}
             </span>
-            <span className="muted2">Demo: me@sonoteca.dev / password123</span>
+            <span className="muted2 break-safe">Demo: me@sonoteca.dev / password123</span>
           </div>
         </div>
       </main>

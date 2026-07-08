@@ -7,7 +7,7 @@ import { CloseIcon, HomeIcon, LibraryIcon, MusicIcon, PlaylistIcon, PlusIcon, Se
 const NAV = [
   { to: "/", label: "Home", icon: HomeIcon, end: true },
   { to: "/search", label: "Search", icon: SearchIcon },
-  { to: "/library", label: "Your Library", icon: LibraryIcon },
+  { to: "/library", label: "Library", icon: LibraryIcon },
   { to: "/playlists", label: "Playlists", icon: PlaylistIcon },
 ];
 
@@ -25,71 +25,70 @@ export function Sidebar() {
   }
 
   return (
-    <aside className={`sidebar${sidebarOpen ? " open" : ""}`} aria-label="Primary">
-      <div className="sidebar__block">
-        <div className="rowBetween">
-          <button className="brand" onClick={() => go("/")} style={{ border: "none", background: "none", cursor: "pointer", color: "inherit" }}>
-            <div className="logo">S</div>
-            <div style={{ textAlign: "left" }}>
-              <div className="brandName">Sonoteca</div>
-              <div className="brandTag">Music Library</div>
-            </div>
-          </button>
-          <button className="iconBtn ghost sidebar__mobileClose" aria-label="Close menu" onClick={() => setSidebar(false)}>
-            <CloseIcon size={18} />
-          </button>
-        </div>
-
-        <nav className="sidebar__nav">
-          {NAV.map(({ to, label, icon: Icon, end }) => (
-            <NavLink
-              key={to}
-              to={to}
-              end={end}
-              className={({ isActive }) => `navItem${isActive ? " active" : ""}`}
-              onClick={() => setSidebar(false)}
-            >
-              <Icon size={20} />
-              <span>{label}</span>
-            </NavLink>
-          ))}
-        </nav>
+    <aside className={`rail${sidebarOpen ? " rail--open" : ""}`} aria-label="Primary">
+      <div className="rail__top">
+        <button className="rail__brand" onClick={() => go("/")} aria-label="Sonoteca home">
+          <span className="rail__logo">S</span>
+          <span className="rail__wordmark">
+            <span className="rail__name">Sonoteca</span>
+            <span className="rail__tag">Music</span>
+          </span>
+        </button>
+        <button className="iconBtn ghost rail__close hideDesktop" aria-label="Close menu" onClick={() => setSidebar(false)}>
+          <CloseIcon size={18} />
+        </button>
       </div>
 
-      <div className="sidebar__block sidebar__library">
-        <div className="sidebar__libraryHead">
-          <div className="kicker">Playlists</div>
-          <button className="iconBtn ghost" style={{ width: 30, height: 30 }} aria-label="New playlist" onClick={() => go("/playlists")}>
-            <PlusIcon size={18} />
+      <nav className="rail__nav">
+        {NAV.map(({ to, label, icon: Icon, end }) => (
+          <NavLink
+            key={to}
+            to={to}
+            end={end}
+            className={({ isActive }) => `rail__link${isActive ? " rail__link--active" : ""}`}
+            onClick={() => setSidebar(false)}
+            title={label}
+          >
+            <span className="rail__linkIcon">
+              <Icon size={22} />
+            </span>
+            <span className="rail__linkLabel">{label}</span>
+          </NavLink>
+        ))}
+      </nav>
+
+      <div className="rail__library">
+        <div className="rail__libraryHead">
+          <span className="rail__sectionLabel">Your playlists</span>
+          <button className="iconBtn ghost rail__addBtn" aria-label="New playlist" onClick={() => go("/playlists")}>
+            <PlusIcon size={16} />
           </button>
         </div>
 
-        <div className="sidebar__scroll">
+        <div className="rail__scroll">
           {!token ? (
-            <div className="muted2" style={{ fontSize: 13, padding: "8px 4px" }}>Sign in to see your playlists.</div>
+            <p className="rail__empty">Sign in to see playlists</p>
           ) : !loaded ? (
-            Array.from({ length: 5 }).map((_, i) => (
-              <div key={i} className="plItem" aria-hidden>
-                <div className="plItem__art skeleton" />
-                <div style={{ flex: 1 }}>
-                  <div className="skeleton skLine" style={{ width: "70%", marginTop: 0 }} />
-                  <div className="skeleton skLine" style={{ width: "40%" }} />
+            Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="rail__pl" aria-hidden>
+                <div className="rail__plArt skeleton" />
+                <div className="rail__plText">
+                  <div className="skeleton skLine" style={{ width: "72%", marginTop: 0 }} />
+                  <div className="skeleton skLine" style={{ width: "45%" }} />
                 </div>
               </div>
             ))
           ) : playlists.length === 0 ? (
-            <div className="muted2" style={{ fontSize: 13, padding: "8px 4px" }}>No playlists yet — create your first one.</div>
+            <p className="rail__empty">No playlists yet</p>
           ) : (
             playlists.map((p) => (
-              <button key={p.id} className="plItem" onClick={() => go(`/playlists?id=${p.id}`)}>
-                <div className="plItem__art">
-                  {p.cover_url ? <img src={p.cover_url} alt="" /> : <MusicIcon size={18} />}
+              <button key={p.id} className="rail__pl" onClick={() => go(`/playlists?id=${p.id}`)}>
+                <div className="rail__plArt">
+                  {p.cover_url ? <img src={p.cover_url} alt="" /> : <MusicIcon size={16} />}
                 </div>
-                <div style={{ minWidth: 0, textAlign: "left" }}>
-                  <div className="truncate" style={{ fontWeight: 650, fontSize: 14, color: "var(--text)" }}>{p.name}</div>
-                  <div className="truncate muted2" style={{ fontSize: 12 }}>
-                    Playlist{p.is_public ? " · Public" : ""}
-                  </div>
+                <div className="rail__plText">
+                  <span className="rail__plName truncate">{p.name}</span>
+                  <span className="rail__plMeta truncate">{p.is_public ? "Public" : "Private"}</span>
                 </div>
               </button>
             ))

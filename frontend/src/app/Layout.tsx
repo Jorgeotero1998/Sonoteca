@@ -36,7 +36,6 @@ export function Layout() {
     }
   }, [token, loadFav, refreshPls]);
 
-  // Close mobile drawer on route change.
   useEffect(() => {
     setSidebar(false);
   }, [loc.pathname, setSidebar]);
@@ -53,21 +52,25 @@ export function Layout() {
         <AmbientMesh />
       </Suspense>
 
-      <div className="appShell">
+      <div className="appFrame">
         <Sidebar />
-        <div className="mainCol">
+
+        <div className="stage">
           <TopBar />
-          <div className="content" ref={contentRef}>
-            <div className="contentInner">
+          <main className="stage__scroll" ref={contentRef}>
+            <div className="stage__content">
               <PageTransition />
             </div>
-          </div>
+          </main>
         </div>
-        <PlayerBar />
-        <MobileNav />
+
+        <div className="dock">
+          <PlayerBar />
+          <MobileNav />
+        </div>
       </div>
 
-      {sidebarOpen ? <div className="drawerScrim hideDesktop" onClick={() => setSidebar(false)} aria-hidden /> : null}
+      {sidebarOpen ? <div className="scrim hideDesktop" onClick={() => setSidebar(false)} aria-hidden /> : null}
 
       <BackendStatusBanner />
       <Toaster />

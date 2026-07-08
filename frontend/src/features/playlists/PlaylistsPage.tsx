@@ -216,7 +216,7 @@ export function PlaylistsPage() {
         {/* Add tracks */}
         <div className="card">
           <div className="h2">Add tracks</div>
-          <div className="row gap2">
+          <div className="row gap2 stackOnMobile">
             <input className="input" value={q} placeholder="Search Deezer for a song…" onChange={(e) => setQ(e.target.value)} onKeyDown={(e) => e.key === "Enter" && search()} />
             <button className="btnPrimary" onClick={search} disabled={searching || !q.trim()}>
               {searching ? "…" : "Search"}
@@ -225,7 +225,7 @@ export function PlaylistsPage() {
           {results.length ? (
             <div className="stack" style={{ gap: 2, maxHeight: 320, overflowY: "auto" }}>
               {results.map((r) => (
-                <div key={r.ref} className="trackRow" style={{ gridTemplateColumns: "44px 1fr auto" }}>
+                <div key={r.ref} className="trackRow trackRow--compact">
                   <div className="trackRow__art">{r.cover_url ? <img src={r.cover_url} alt="" /> : null}</div>
                   <div className="truncate">
                     <div className="truncate" style={{ fontWeight: 650 }}>{r.title}</div>
@@ -250,14 +250,14 @@ export function PlaylistsPage() {
               const t = it?.item ? asTrack(it.item, it.ref) : null;
               const playing = t?.ref === curRef;
               return (
-                <div key={it.id} className={`trackRow${playing ? " playing" : ""}`} style={{ gridTemplateColumns: "28px 44px 1fr auto" }}>
+                <div key={it.id} className={`trackRow trackRow--actionsVisible${playing ? " playing" : ""}`}>
                   <div className="trackRow__idx">{i + 1}</div>
                   <div className="trackRow__art">{t?.cover_url ? <img src={t.cover_url} alt="" /> : null}</div>
                   <div className="truncate">
                     <div className="truncate" style={{ fontWeight: 650 }}>{t?.title || it.ref}</div>
                     <div className="muted truncate" style={{ fontSize: 13 }}>{t ? `${t.artist}${t.album ? ` · ${t.album}` : ""}` : ""}</div>
                   </div>
-                  <div className="trackRow__actions" style={{ opacity: 1 }}>
+                  <div className="trackRow__actions">
                     {t?.duration_ms ? <span className="muted2" style={{ fontSize: 13 }}>{fmtDuration(t.duration_ms)}</span> : null}
                     <button className="iconBtn ghost" aria-label="Move up" onClick={() => move(it.id, -1)} disabled={i === 0}>
                       <ChevronLeftIcon size={16} style={{ transform: "rotate(90deg)" }} />
