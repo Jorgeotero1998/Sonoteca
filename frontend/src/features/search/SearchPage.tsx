@@ -85,17 +85,22 @@ export function SearchPage() {
   const empty = !busy && items.length === 0;
 
   return (
-    <div className="stack" style={{ gap: 8 }}>
-      <div className="searchToolbar rowBetween wrap">
-        <div className="tabs">
+    <div className="page">
+      <header className="searchHead">
+        <h1 className="searchHead__title">Search</h1>
+        <p className="searchHead__sub">Explore the full Deezer catalog</p>
+      </header>
+
+      <div className="searchBar">
+        <div className="segControl segControl--compact">
           {(["track", "artist", "album"] as Tab[]).map((t) => (
-            <button key={t} className={`tab${tab === t ? " active" : ""}`} onClick={() => setTab(t)}>
+            <button key={t} className={`segControl__btn${tab === t ? " segControl__btn--active" : ""}`} onClick={() => setTab(t)}>
               {t === "track" ? "Songs" : t === "artist" ? "Artists" : "Albums"}
             </button>
           ))}
         </div>
         {tab === "track" && tracks.length ? (
-          <button className="btnPrimary" onClick={() => setQueue(tracks, 0)}>
+          <button className="btn btn--primary" onClick={() => setQueue(tracks, 0)}>
             <PlayIcon size={16} /> Play results
           </button>
         ) : null}
@@ -113,8 +118,8 @@ export function SearchPage() {
         <EmptyState icon={<SearchIcon size={28} />} title={`No results for “${q}”`} hint="Try a different spelling or search another category." />
       ) : tab === "track" ? (
         <>
-          <SectionHeader title={`Songs`} subtitle={`Results for “${q}”`} />
-          <div className="stack" style={{ gap: 2 }}>
+          <SectionHeader title="Songs" subtitle={`Results for “${q}”`} />
+          <div className="songList">
             {items.map((x, i) => {
               const t = asTrack(x);
               return (
@@ -131,7 +136,7 @@ export function SearchPage() {
       ) : (
         <>
           <SectionHeader title={tab === "artist" ? "Artists" : "Albums"} subtitle={`Results for “${q}”`} />
-          <div className="grid">
+          <div className="tileGrid">
             {items.map((x) => (
               <MediaCard
                 key={x.ref}
@@ -146,8 +151,8 @@ export function SearchPage() {
         </>
       )}
 
-      <div ref={sentinelRef} style={{ height: 1 }} />
-      {busy && items.length > 0 ? <div className="muted2" style={{ padding: "12px 4px", fontSize: 13 }}>Loading more…</div> : null}
+      <div ref={sentinelRef} className="sentinel" />
+      {busy && items.length > 0 ? <p className="page__loading">Loading more…</p> : null}
     </div>
   );
 }

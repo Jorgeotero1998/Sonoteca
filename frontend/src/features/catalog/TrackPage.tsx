@@ -3,7 +3,8 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { sonotecaApi } from "../../services/api/sonotecaApi";
 import { usePlayerStore, type Track } from "../../store/playerStore";
 import { useFavoritesStore } from "../../store/favoritesStore";
-import { useIsCurrent } from "../../components/media";
+import { EmptyState } from "../../components/media";
+import { PageHero } from "../../components/PageHero";
 import { AlertIcon, ExternalIcon, HeartIcon, PauseIcon, PlayIcon } from "../../components/icons";
 
 function asTrack(x: any): Track {
@@ -24,12 +25,15 @@ export function TrackPage() {
   const nav = useNavigate();
   const setQueue = usePlayerStore((s) => s.setQueue);
   const togglePlay = usePlayerStore((s) => s.togglePlay);
+  const isPlaying = usePlayerStore((s) => s.isPlaying);
+  const curRef = usePlayerStore((s) => s.queue[s.idx]?.ref);
   const [t, setT] = useState<any | null>(null);
   const [busy, setBusy] = useState(true);
   const [err, setErr] = useState(false);
   const favHas = useFavoritesStore((s) => (t?.ref ? s.refs.has(t.ref) : false));
   const toggleFav = useFavoritesStore((s) => s.toggle);
-  const { isCurrent, isPlaying } = useIsCurrent(t?.ref);
+
+  const isCurrent = Boolean(t?.ref) && curRef === t?.ref;
 
   useEffect(() => {
     if (!ref) return;
@@ -54,7 +58,7 @@ export function TrackPage() {
   const track = t ? asTrack(t) : null;
   const canFav = Boolean(track?.ref?.startsWith("deezer:"));
 
-  if (err) return <div className="stateBox"><div className="stateBox__icon"><AlertIcon size={26} /></div><div className="h2">Track not found</div><button className="btn" onClick={() => nav("/")}>Back home</button></div>;
+  if (err) return <EmptyState icon={<AlertIcon size={28} />} title="Track not found" hint="This track could not be loaded." action={<button className="btn" onClick={() => nav("/")}>Back home</button>} />;
 
   function play() {
     if (!track) return;
@@ -62,29 +66,29 @@ export function TrackPage() {
     else setQueue([track], 0);
   }
 
+  const subtitle = [track?.artist, track?.album].filter(Boolean).join(" · ");
+
   return (
-    <div className="stack" style={{ gap: 8 }}>
-      <div className="hero">
-        <div className="hero__art">
-          {track?.cover_url ? <img src={track.cover_url} alt="" /> : <div className="skeleton" style={{ width: "100%", height: "100%" }} />}
-        </div>
-        <div className="hero__meta">
-          <div className="kicker">Song</div>
-          <div className="hero__title">{track?.title || (busy ? "Loading…" : "")}</div>
-          <div className="muted">
-            {track?.artist}
-            {track?.album ? ` · ${track.album}` : ""}
-          </div>
-          <div className="row wrap gap2 mt3">
+    <div className="page page--flush">
+      <PageHero
+        type="Song"
+        title={track?.title || (busy ? "Loading…" : "")}
+        subtitle={subtitle}
+        imageUrl={track?.cover_url}
+        actions={
+          <>
             {track?.preview_url ? (
-              <button className="btnPrimary" onClick={play}>
-                {isPlaying ? <PauseIcon size={16} /> : <PlayIcon size={16} />} {isPlaying ? "Pause" : "Play preview"}
+              <button className="btn btn--primary" onClick={play}>
+                {isCurrent && isPlaying ? <PauseIcon size={16} /> : <PlayIcon size={16} />}
+                {isCurrent && isPlaying ? "Pause" : "Play preview"}
               </button>
             ) : (
-              <button className="btnPrimary" disabled>No preview</button>
+              <button className="btn btn--primary" disabled>
+                No preview
+              </button>
             )}
             {canFav ? (
-              <button className={`btn${favHas ? "" : ""}`} onClick={() => track && toggleFav(track.ref, track.title)}>
+              <button className="btn" onClick={() => track && toggleFav(track.ref, track.title)}>
                 <HeartIcon size={16} filled={favHas} /> {favHas ? "Liked" : "Like"}
               </button>
             ) : null}
@@ -93,14 +97,15 @@ export function TrackPage() {
                 <ExternalIcon size={16} /> Deezer
               </a>
             ) : null}
-          </div>
-          {track?.album ? (
-            <div className="mt3">
-              <Link className="chip" to={`/search?q=${encodeURIComponent(track.artist)}&tab=artist`}>More from {track.artist}</Link>
-            </div>
-          ) : null}
-        </div>
-      </div>
+          </>
+        }
+      >
+        {track?.artist ? (
+          <Link className="badge" to={`/search?q=${encodeURIComponent(track.artist)}&tab=artist`}>
+            More from {track.artist}
+          </Link>
+        ) : null}
+      </PageHero>
     </div>
   );
 }

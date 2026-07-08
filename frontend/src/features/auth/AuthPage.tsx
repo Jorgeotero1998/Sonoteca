@@ -53,89 +53,95 @@ export function AuthPage() {
   }
 
   return (
-    <div className="authScreen">
-      <aside className="authAside">
-        <div className="brand">
-          <div className="logo">S</div>
-          <div className="brandName">Sonoteca</div>
+    <div className="auth">
+      <aside className="auth__showcase">
+        <div className="auth__glow" aria-hidden />
+        <div className="auth__brand">
+          <span className="auth__logo">S</span>
+          <span className="auth__name">Sonoteca</span>
         </div>
-        <div>
-          <div className="authHeadline">
+
+        <div className="auth__pitch">
+          <h1 className="auth__headline">
             Your music,
             <br />
-            beautifully organized.
-          </div>
-          <div className="muted" style={{ marginTop: 16, maxWidth: 420, fontSize: 16 }}>
-            A production-grade music library — Deezer catalog, playlists, favorites and a premium player.
-          </div>
-          <div className="stack gap3" style={{ marginTop: 28 }}>
+            <em>elevated.</em>
+          </h1>
+          <p className="auth__tagline">A premium Deezer-powered library with playlists, favorites, and a studio-grade player.</p>
+          <ul className="auth__features">
             {FEATURES.map((f, i) => (
-              <div key={i} className="authFeature">
-                <div className="authFeature__icon">{f.icon}</div>
-                <span className="authFeature__text">{f.text}</span>
-              </div>
+              <li key={i} className="auth__feature">
+                <span className="auth__featureIcon">{f.icon}</span>
+                <span>{f.text}</span>
+              </li>
             ))}
-          </div>
+          </ul>
         </div>
-        <div className="muted2" style={{ fontSize: 13 }}>Built by Jorge Otero · FastAPI + React + PostgreSQL</div>
+
+        <p className="auth__credit">Built by Jorge Otero · FastAPI + React + PostgreSQL</p>
       </aside>
 
-      <main className="authMain">
-        <div className="authCard panel" style={{ padding: 28 }}>
-          <div className="brand hideDesktop authMobileBrand">
-            <div className="logo">S</div>
+      <main className="auth__formArea">
+        <div className="auth__card">
+          <div className="auth__mobileBrand hideDesktop">
+            <span className="auth__logo">S</span>
             <div>
-              <div className="brandName">Sonoteca</div>
-              <div className="brandTag">Music Library</div>
+              <div className="auth__name">Sonoteca</div>
+              <div className="auth__cardSub">Music Library</div>
             </div>
           </div>
 
-          <div className="tabs" style={{ marginBottom: 20 }}>
-            <button className={`tab${mode === "login" ? " active" : ""}`} onClick={() => setMode("login")}>Log in</button>
-            <button className={`tab${mode === "register" ? " active" : ""}`} onClick={() => setMode("register")}>Create account</button>
+          <div className="segControl">
+            <button className={`segControl__btn${mode === "login" ? " segControl__btn--active" : ""}`} onClick={() => setMode("login")}>
+              Log in
+            </button>
+            <button className={`segControl__btn${mode === "register" ? " segControl__btn--active" : ""}`} onClick={() => setMode("register")}>
+              Create account
+            </button>
           </div>
 
-          <h1 className="h1" style={{ marginBottom: 4 }}>{mode === "login" ? "Welcome back" : "Get started"}</h1>
-          <div className="muted" style={{ marginBottom: 20 }}>
+          <h2 className="auth__formTitle">{mode === "login" ? "Welcome back" : "Get started"}</h2>
+          <p className="auth__formSub">
             {mode === "login" ? "Log in to your Sonoteca account." : "Create an account to save playlists & favorites."}
-          </div>
+          </p>
 
           {err ? (
-            <div className="chip" style={{ color: "var(--danger)", borderColor: "color-mix(in srgb, var(--danger) 40%, transparent)", marginBottom: 16, width: "100%" }}>
-              <AlertIcon size={16} /> <span className="truncate">{err}</span>
+            <div className="alert alert--error">
+              <AlertIcon size={16} />
+              <span className="truncate">{err}</span>
             </div>
           ) : null}
 
-          <form className="stack gap3" onSubmit={submit}>
-            <label className="stack" style={{ gap: 6 }}>
-              <span className="kicker">Email</span>
-              <input className="input" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" required autoComplete="email" />
+          <form className="auth__form" onSubmit={submit}>
+            <label className="field">
+              <span className="field__label">Email</span>
+              <input className="field__input" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@example.com" required autoComplete="email" />
             </label>
-            <label className="stack" style={{ gap: 6 }}>
-              <span className="kicker">Password</span>
-              <input className="input" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" required autoComplete={mode === "login" ? "current-password" : "new-password"} />
+            <label className="field">
+              <span className="field__label">Password</span>
+              <input className="field__input" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" required autoComplete={mode === "login" ? "current-password" : "new-password"} />
             </label>
             {mode === "register" ? (
-              <label className="stack" style={{ gap: 6 }}>
-                <span className="kicker">Role (demonstrates RBAC)</span>
-                <select className="input" value={role} onChange={(e) => setRole(e.target.value as any)}>
+              <label className="field">
+                <span className="field__label">Role (demonstrates RBAC)</span>
+                <select className="field__input" value={role} onChange={(e) => setRole(e.target.value as any)}>
                   <option value="owner">Owner</option>
                   <option value="editor">Editor</option>
                   <option value="viewer">Viewer</option>
                 </select>
               </label>
             ) : null}
-            <button className="btnPrimary" type="submit" disabled={busy} style={{ marginTop: 6, padding: "12px 16px" }}>
+            <button className="btn btn--primary btn--full" type="submit" disabled={busy}>
               {busy ? "Please wait…" : mode === "login" ? "Log in" : "Create account"}
             </button>
           </form>
 
-          <div className="row gap2 wrap" style={{ marginTop: 18, fontSize: 12 }}>
-            <span className="chip" style={{ padding: "4px 10px" }}>
+          <div className="auth__meta">
+            <span className="badge">
               <span className={`statusDot${health === "up" ? " statusDot--ok" : health === "down" ? " statusDot--err" : ""}`} />
               API {health}
             </span>
-            <span className="muted2 break-safe">Demo: me@sonoteca.dev / password123</span>
+            <span className="auth__demo">Demo: me@sonoteca.dev / password123</span>
           </div>
         </div>
       </main>

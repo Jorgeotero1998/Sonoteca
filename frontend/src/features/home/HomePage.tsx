@@ -72,6 +72,7 @@ export function HomePage() {
   const relSentinel = useRef<HTMLDivElement | null>(null);
 
   const playable = useMemo(() => charts.map(asTrack).filter((t) => t.preview_url), [charts]);
+  const heroCover = charts[0]?.cover_url;
 
   const loadCharts = useCallback(
     async (reset = false) => {
@@ -130,27 +131,31 @@ export function HomePage() {
   }, [relMore, loadReleases]);
 
   return (
-    <div className="stack" style={{ gap: 8 }}>
-      <section className="editorialHero">
-        <div className="editorialHero__copy">
-          <span className="eyebrow">Sonoteca · Deezer catalog</span>
-          <h1 className="display">{greeting()}</h1>
-          <p className="lede">
-            Charts, fresh releases, and your library — every track with a 30-second preview.
-          </p>
+    <div className="page">
+      <section className="homeHero">
+        {heroCover ? (
+          <div className="homeHero__bg" aria-hidden>
+            <img src={heroCover} alt="" />
+            <div className="homeHero__bgFade" />
+          </div>
+        ) : (
+          <div className="homeHero__bg homeHero__bg--mesh" aria-hidden />
+        )}
+
+        <div className="homeHero__content">
+          <span className="homeHero__eyebrow">Sonoteca · Deezer</span>
+          <h1 className="homeHero__title">{greeting()}</h1>
+          <p className="homeHero__lede">Charts, fresh releases, and your library — every track with a 30-second preview.</p>
           {playable.length ? (
-            <button
-              className="btnPrimary"
-              style={{ marginTop: 20 }}
-              onClick={() => setQueue(playable, 0)}
-            >
-              <PlayIcon size={16} /> Start listening
+            <button className="btn btn--primary btn--lg" onClick={() => setQueue(playable, 0)}>
+              <PlayIcon size={18} /> Start listening
             </button>
           ) : null}
         </div>
-        {charts[0]?.cover_url ? (
-          <div className="editorialHero__art" aria-hidden>
-            <img src={charts[0].cover_url} alt="" />
+
+        {heroCover ? (
+          <div className="homeHero__disc" aria-hidden>
+            <img src={heroCover} alt="" />
           </div>
         ) : null}
       </section>
@@ -159,7 +164,7 @@ export function HomePage() {
         title="Top Charts"
         subtitle="What the world is listening to right now"
         action={
-          <button className="btnPrimary" onClick={() => setQueue(playable, 0)} disabled={!playable.length}>
+          <button className="btn btn--primary" onClick={() => setQueue(playable, 0)} disabled={!playable.length}>
             <PlayIcon size={16} /> Play all
           </button>
         }
@@ -173,9 +178,9 @@ export function HomePage() {
           ))}
         </MotionGrid>
       )}
-      <div ref={chartsSentinel} style={{ height: 1 }} />
+      <div ref={chartsSentinel} className="sentinel" />
 
-      <SectionHeader title="New Releases" subtitle="Fresh albums picked by Deezer editors" />
+      <SectionHeader title="New Releases" subtitle="Fresh albums from Deezer editors" />
       {relLoading ? (
         <GridSkeleton count={12} />
       ) : (
@@ -192,8 +197,8 @@ export function HomePage() {
           ))}
         </MotionGrid>
       )}
-      <div ref={relSentinel} style={{ height: 1 }} />
-      {busy || relLoading ? <div className="muted2" style={{ padding: "16px 4px", fontSize: 13 }}>Loading more…</div> : null}
+      <div ref={relSentinel} className="sentinel" />
+      {busy || relLoading ? <p className="page__loading">Loading more…</p> : null}
     </div>
   );
 }

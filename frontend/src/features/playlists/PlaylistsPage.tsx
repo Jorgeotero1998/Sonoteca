@@ -5,6 +5,7 @@ import { usePlayerStore, type Track } from "../../store/playerStore";
 import { usePlaylistsStore } from "../../store/playlistsStore";
 import { toast } from "../../store/uiStore";
 import { EmptyState, MediaCard, SectionHeader, fmtDuration } from "../../components/media";
+import { PageHero } from "../../components/PageHero";
 import { ChevronLeftIcon, ChevronRightIcon, ExternalIcon, MusicIcon, PlaylistIcon, PlayIcon, PlusIcon, ShareIcon, TrashIcon } from "../../components/icons";
 
 function asTrack(x: any, ref?: string): Track {
@@ -162,6 +163,7 @@ export function PlaylistsPage() {
   }, [detail]);
 
   const shareUrl = detail?.is_public && detail?.share_slug ? `${location.origin}/public/${detail.share_slug}` : null;
+  const coverUrl = detail?.items?.[0]?.item?.cover_url;
 
   function copyShare() {
     if (!shareUrl) return;
@@ -177,25 +179,27 @@ export function PlaylistsPage() {
     setQueue(playableQueue, start < 0 ? 0 : start);
   }
 
-  /* ------------------------------------------------------------- detail view */
   if (activeId) {
     return (
-      <div className="stack" style={{ gap: 8 }}>
-        <button className="btn" style={{ alignSelf: "flex-start" }} onClick={() => select(null)}>
+      <div className="page page--flush">
+        <button className="btn btn--back" onClick={() => select(null)}>
           <ChevronLeftIcon size={16} /> All playlists
         </button>
 
-        <div className="hero">
-          <div className="hero__art" style={{ display: "grid", placeItems: "center", background: "linear-gradient(145deg, var(--acc), var(--acc-2))", color: "var(--acc-contrast)" }}>
-            {detail?.items?.[0]?.item?.cover_url ? <img src={detail.items[0].item.cover_url} alt="" /> : <PlaylistIcon size={48} />}
-          </div>
-          <div className="hero__meta">
-            <div className="kicker">{detail?.is_public ? "Public playlist" : "Playlist"}</div>
-            <div className="hero__title">{detail?.name || "Loading…"}</div>
-            {detail?.description ? <div className="muted">{detail.description}</div> : null}
-            <div className="muted2" style={{ fontSize: 13 }}>{detail?.items?.length || 0} tracks</div>
-            <div className="row wrap gap2 mt3">
-              <button className="btnPrimary" onClick={() => setQueue(playableQueue, 0)} disabled={!playableQueue.length}>
+        <PageHero
+          type={detail?.is_public ? "Public playlist" : "Playlist"}
+          title={detail?.name || "Loading…"}
+          subtitle={
+            <>
+              {detail?.description ? <span>{detail.description}</span> : null}
+              <span>{detail?.items?.length || 0} tracks</span>
+            </>
+          }
+          imageUrl={coverUrl}
+          fallback={<PlaylistIcon size={48} />}
+          actions={
+            <>
+              <button className="btn btn--primary" onClick={() => setQueue(playableQueue, 0)} disabled={!playableQueue.length}>
                 <PlayIcon size={16} /> Play
               </button>
               <button className="btn" onClick={togglePublic} disabled={busy}>
@@ -206,121 +210,124 @@ export function PlaylistsPage() {
                   <ShareIcon size={16} /> Share
                 </button>
               ) : null}
-              <button className="btnDanger" onClick={() => detail && del(activeId, detail.name)} disabled={busy}>
+              <button className="btn btn--danger" onClick={() => detail && del(activeId, detail.name)} disabled={busy}>
                 <TrashIcon size={16} /> Delete
               </button>
-            </div>
-          </div>
-        </div>
+            </>
+          }
+        />
 
-        {/* Add tracks */}
-        <div className="card">
-          <div className="h2">Add tracks</div>
-          <div className="row gap2 stackOnMobile">
-            <input className="input" value={q} placeholder="Search Deezer for a song…" onChange={(e) => setQ(e.target.value)} onKeyDown={(e) => e.key === "Enter" && search()} />
-            <button className="btnPrimary" onClick={search} disabled={searching || !q.trim()}>
-              {searching ? "…" : "Search"}
-            </button>
-          </div>
-          {results.length ? (
-            <div className="stack" style={{ gap: 2, maxHeight: 320, overflowY: "auto" }}>
-              {results.map((r) => (
-                <div key={r.ref} className="trackRow trackRow--compact">
-                  <div className="trackRow__art">{r.cover_url ? <img src={r.cover_url} alt="" /> : null}</div>
-                  <div className="truncate">
-                    <div className="truncate" style={{ fontWeight: 650 }}>{r.title}</div>
-                    <div className="muted truncate" style={{ fontSize: 13 }}>{r.artist}</div>
-                  </div>
-                  <button className="iconBtn" aria-label={`Add ${r.title}`} onClick={() => addTrack(r.ref, r.title)}>
-                    <PlusIcon size={18} />
-                  </button>
-                </div>
-              ))}
+        <div className="page__body">
+          <div className="panel">
+            <h3 className="panel__title">Add tracks</h3>
+            <div className="panel__row">
+              <input className="field__input" value={q} placeholder="Search Deezer for a song…" onChange={(e) => setQ(e.target.value)} onKeyDown={(e) => e.key === "Enter" && search()} />
+              <button className="btn btn--primary" onClick={search} disabled={searching || !q.trim()}>
+                {searching ? "…" : "Search"}
+              </button>
             </div>
-          ) : null}
-        </div>
-
-        {/* Items */}
-        <SectionHeader title="In this playlist" subtitle={detailBusy ? "Loading…" : undefined} />
-        {(detail?.items || []).length === 0 ? (
-          <EmptyState icon={<MusicIcon size={26} />} title="This playlist is empty" hint="Search above to add your first track." />
-        ) : (
-          <div className="stack" style={{ gap: 2 }}>
-            {(detail.items as any[]).map((it, i) => {
-              const t = it?.item ? asTrack(it.item, it.ref) : null;
-              const playing = t?.ref === curRef;
-              return (
-                <div key={it.id} className={`trackRow trackRow--actionsVisible${playing ? " playing" : ""}`}>
-                  <div className="trackRow__idx">{i + 1}</div>
-                  <div className="trackRow__art">{t?.cover_url ? <img src={t.cover_url} alt="" /> : null}</div>
-                  <div className="truncate">
-                    <div className="truncate" style={{ fontWeight: 650 }}>{t?.title || it.ref}</div>
-                    <div className="muted truncate" style={{ fontSize: 13 }}>{t ? `${t.artist}${t.album ? ` · ${t.album}` : ""}` : ""}</div>
+            {results.length ? (
+              <div className="songList songList--compact">
+                {results.map((r) => (
+                  <div key={r.ref} className="songRow songRow--compact">
+                    <div className="songRow__thumb">{r.cover_url ? <img src={r.cover_url} alt="" /> : null}</div>
+                    <div className="songRow__info truncate">
+                      <div className="songRow__title truncate">{r.title}</div>
+                      <div className="songRow__artist truncate">{r.artist}</div>
+                    </div>
+                    <button className="iconBtn" aria-label={`Add ${r.title}`} onClick={() => addTrack(r.ref, r.title)}>
+                      <PlusIcon size={18} />
+                    </button>
                   </div>
-                  <div className="trackRow__actions">
-                    {t?.duration_ms ? <span className="muted2" style={{ fontSize: 13 }}>{fmtDuration(t.duration_ms)}</span> : null}
-                    <button className="iconBtn ghost" aria-label="Move up" onClick={() => move(it.id, -1)} disabled={i === 0}>
-                      <ChevronLeftIcon size={16} style={{ transform: "rotate(90deg)" }} />
-                    </button>
-                    <button className="iconBtn ghost" aria-label="Move down" onClick={() => move(it.id, 1)} disabled={i === detail.items.length - 1}>
-                      <ChevronRightIcon size={16} style={{ transform: "rotate(90deg)" }} />
-                    </button>
-                    {t?.preview_url ? (
-                      <button className="iconBtn ghost" aria-label="Play" onClick={() => playItem(t)}>
-                        <PlayIcon size={16} />
+                ))}
+              </div>
+            ) : null}
+          </div>
+
+          <SectionHeader title="In this playlist" subtitle={detailBusy ? "Loading…" : undefined} />
+          {(detail?.items || []).length === 0 ? (
+            <EmptyState icon={<MusicIcon size={26} />} title="This playlist is empty" hint="Search above to add your first track." />
+          ) : (
+            <div className="songList">
+              {(detail.items as any[]).map((it, i) => {
+                const t = it?.item ? asTrack(it.item, it.ref) : null;
+                const playing = t?.ref === curRef;
+                return (
+                  <div key={it.id} className={`songRow songRow--actions${playing ? " songRow--active" : ""}`}>
+                    <div className="songRow__num">{i + 1}</div>
+                    <div className="songRow__thumb">{t?.cover_url ? <img src={t.cover_url} alt="" /> : null}</div>
+                    <div className="songRow__info truncate">
+                      <div className="songRow__title truncate">{t?.title || it.ref}</div>
+                      <div className="songRow__artist truncate">{t ? `${t.artist}${t.album ? ` · ${t.album}` : ""}` : ""}</div>
+                    </div>
+                    <div className="songRow__end">
+                      {t?.duration_ms ? <span className="songRow__dur">{fmtDuration(t.duration_ms)}</span> : null}
+                      <button className="iconBtn ghost" aria-label="Move up" onClick={() => move(it.id, -1)} disabled={i === 0}>
+                        <ChevronLeftIcon size={16} style={{ transform: "rotate(90deg)" }} />
                       </button>
-                    ) : t?.external_urls?.deezer ? (
-                      <a className="iconBtn ghost" href={t.external_urls.deezer} target="_blank" rel="noreferrer" aria-label="Open in Deezer">
-                        <ExternalIcon size={16} />
-                      </a>
-                    ) : null}
-                    <button className="iconBtn ghost" aria-label="Remove" onClick={() => removeItem(it.id)}>
-                      <TrashIcon size={16} />
-                    </button>
+                      <button className="iconBtn ghost" aria-label="Move down" onClick={() => move(it.id, 1)} disabled={i === detail.items.length - 1}>
+                        <ChevronRightIcon size={16} style={{ transform: "rotate(90deg)" }} />
+                      </button>
+                      {t?.preview_url ? (
+                        <button className="iconBtn ghost" aria-label="Play" onClick={() => playItem(t)}>
+                          <PlayIcon size={16} />
+                        </button>
+                      ) : t?.external_urls?.deezer ? (
+                        <a className="iconBtn ghost" href={t.external_urls.deezer} target="_blank" rel="noreferrer" aria-label="Open in Deezer">
+                          <ExternalIcon size={16} />
+                        </a>
+                      ) : null}
+                      <button className="iconBtn ghost" aria-label="Remove" onClick={() => removeItem(it.id)}>
+                        <TrashIcon size={16} />
+                      </button>
+                    </div>
                   </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
+                );
+              })}
+            </div>
+          )}
+        </div>
       </div>
     );
   }
 
-  /* ------------------------------------------------------------- list view */
   return (
-    <div className="stack" style={{ gap: 8 }}>
+    <div className="page">
       <SectionHeader
         title="Your Playlists"
         subtitle="Create, curate and share collections"
         action={
-          <button className="btnPrimary" onClick={() => setCreating((v) => !v)}>
+          <button className="btn btn--primary" onClick={() => setCreating((v) => !v)}>
             <PlusIcon size={16} /> New playlist
           </button>
         }
       />
 
       {creating ? (
-        <div className="card">
-          <div className="h2">Create a playlist</div>
-          <input className="input" value={draft.name} placeholder="Playlist name" autoFocus onChange={(e) => setDraft({ ...draft, name: e.target.value })} onKeyDown={(e) => e.key === "Enter" && create()} />
-          <input className="input" value={draft.description} placeholder="Description (optional)" onChange={(e) => setDraft({ ...draft, description: e.target.value })} />
-          <label className="chip" style={{ width: "fit-content", cursor: "pointer" }}>
+        <div className="panel">
+          <h3 className="panel__title">Create a playlist</h3>
+          <input className="field__input" value={draft.name} placeholder="Playlist name" autoFocus onChange={(e) => setDraft({ ...draft, name: e.target.value })} onKeyDown={(e) => e.key === "Enter" && create()} />
+          <input className="field__input" value={draft.description} placeholder="Description (optional)" onChange={(e) => setDraft({ ...draft, description: e.target.value })} />
+          <label className="badge badge--check">
             <input type="checkbox" checked={draft.is_public} onChange={(e) => setDraft({ ...draft, is_public: e.target.checked })} />
             <span>Make public &amp; shareable</span>
           </label>
-          <div className="row gap2">
-            <button className="btnPrimary" onClick={create} disabled={busy || !draft.name.trim()}>Create</button>
-            <button className="btn" onClick={() => setCreating(false)}>Cancel</button>
+          <div className="panel__row">
+            <button className="btn btn--primary" onClick={create} disabled={busy || !draft.name.trim()}>
+              Create
+            </button>
+            <button className="btn" onClick={() => setCreating(false)}>
+              Cancel
+            </button>
           </div>
         </div>
       ) : null}
 
       {!plLoaded ? (
-        <div className="grid">
+        <div className="tileGrid">
           {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="mediaCard" aria-hidden>
-              <div className="mediaCard__art skeleton" />
+            <div key={i} className="tile" aria-hidden>
+              <div className="tile__art skeleton" />
               <div className="skeleton skLine" style={{ width: "70%" }} />
             </div>
           ))}
@@ -330,10 +337,14 @@ export function PlaylistsPage() {
           icon={<PlaylistIcon size={28} />}
           title="No playlists yet"
           hint="Create your first playlist to start collecting your favorite tracks."
-          action={<button className="btnPrimary" onClick={() => setCreating(true)}><PlusIcon size={16} /> New playlist</button>}
+          action={
+            <button className="btn btn--primary" onClick={() => setCreating(true)}>
+              <PlusIcon size={16} /> New playlist
+            </button>
+          }
         />
       ) : (
-        <div className="grid">
+        <div className="tileGrid">
           {playlists.map((p) => (
             <MediaCard
               key={p.id}

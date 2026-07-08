@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { sonotecaApi } from "../../services/api/sonotecaApi";
 import { usePlayerStore, type Track } from "../../store/playerStore";
 import { EmptyState, GridSkeleton, MediaCard, RowSkeleton, SectionHeader, TrackRow } from "../../components/media";
+import { PageHero } from "../../components/PageHero";
 import { ExternalIcon, PlayIcon } from "../../components/icons";
 
 function asTrack(x: any): Track {
@@ -113,17 +114,16 @@ export function ArtistPage() {
   }
 
   return (
-    <div className="stack" style={{ gap: 8 }}>
-      <div className="hero">
-        <div className="hero__art round">
-          {a?.image_url ? <img src={a.image_url} alt="" /> : <div className="skeleton" style={{ width: "100%", height: "100%" }} />}
-        </div>
-        <div className="hero__meta">
-          <div className="kicker">Artist</div>
-          <div className="hero__title">{a?.name || "Loading…"}</div>
-          {a?.nb_fan ? <div className="muted">{Number(a.nb_fan).toLocaleString()} fans</div> : null}
-          <div className="row wrap gap2 mt3">
-            <button className="btnPrimary" onClick={() => setQueue(playableTop, 0)} disabled={!playableTop.length}>
+    <div className="page page--flush">
+      <PageHero
+        type="Artist"
+        title={a?.name || "Loading…"}
+        subtitle={a?.nb_fan ? `${Number(a.nb_fan).toLocaleString()} fans` : undefined}
+        imageUrl={a?.image_url}
+        round
+        actions={
+          <>
+            <button className="btn btn--primary" onClick={() => setQueue(playableTop, 0)} disabled={!playableTop.length}>
               <PlayIcon size={16} /> Play top tracks
             </button>
             {a?.external_urls?.deezer ? (
@@ -131,55 +131,57 @@ export function ArtistPage() {
                 <ExternalIcon size={16} /> Deezer
               </a>
             ) : null}
+          </>
+        }
+      />
+
+      <div className="page__body">
+        <SectionHeader title="Popular" subtitle="Top tracks with 30s previews" />
+        {topLoading ? (
+          <RowSkeleton count={6} />
+        ) : top.length === 0 ? (
+          <EmptyState title="No tracks found" />
+        ) : (
+          <div className="songList">
+            {top.map((x, i) => {
+              const t = asTrack(x);
+              return (
+                <TrackRow
+                  key={`${t.ref}-${i}`}
+                  track={t}
+                  index={i}
+                  onPlay={() => (t.preview_url ? playTrack(t) : window.open(t.external_urls?.deezer || `https://www.deezer.com/track/${t.ref.split(":")[1]}`, "_blank"))}
+                />
+              );
+            })}
+            {topMore ? (
+              <button className="btn" style={{ alignSelf: "flex-start", marginTop: 8 }} onClick={loadTop}>
+                Show more
+              </button>
+            ) : null}
           </div>
-        </div>
-      </div>
+        )}
 
-      <SectionHeader title="Popular" subtitle="Top tracks with 30s previews" />
-      {topLoading ? (
-        <RowSkeleton count={6} />
-      ) : top.length === 0 ? (
-        <EmptyState title="No tracks found" />
-      ) : (
-        <div className="stack" style={{ gap: 2 }}>
-          {top.map((x, i) => {
-            const t = asTrack(x);
-            return (
-              <TrackRow
-                key={`${t.ref}-${i}`}
-                track={t}
-                index={i}
-                onPlay={() => (t.preview_url ? playTrack(t) : window.open(t.external_urls?.deezer || `https://www.deezer.com/track/${t.ref.split(":")[1]}`, "_blank"))}
+        <SectionHeader title="Discography" subtitle="Albums & singles" />
+        {albLoading && albums.length === 0 ? (
+          <GridSkeleton count={12} />
+        ) : albums.length === 0 ? (
+          <EmptyState title="No albums found" />
+        ) : (
+          <div className="tileGrid">
+            {albums.map((al) => (
+              <MediaCard
+                key={al.ref}
+                title={al.title}
+                subtitle={al.release_date ? String(al.release_date).slice(0, 4) : undefined}
+                imageUrl={al.cover_url}
+                onOpen={() => nav(`/album/${encodeURIComponent(al.ref)}`)}
               />
-            );
-          })}
-          {topMore ? (
-            <button className="btn" style={{ alignSelf: "flex-start", marginTop: 8 }} onClick={loadTop}>
-              Show more
-            </button>
-          ) : null}
-        </div>
-      )}
-
-      <SectionHeader title="Discography" subtitle="Albums & singles" />
-      {albLoading && albums.length === 0 ? (
-        <GridSkeleton count={12} />
-      ) : albums.length === 0 ? (
-        <EmptyState title="No albums found" />
-      ) : (
-        <div className="grid">
-          {albums.map((al) => (
-            <MediaCard
-              key={al.ref}
-              title={al.title}
-              subtitle={al.release_date ? String(al.release_date).slice(0, 4) : undefined}
-              imageUrl={al.cover_url}
-              onOpen={() => nav(`/album/${encodeURIComponent(al.ref)}`)}
-            />
-          ))}
-        </div>
-      )}
-      <div ref={albSentinel} style={{ height: 1 }} />
+            ))}
+          </div>
+        )}
+        <div ref={albSentinel} className="sentinel" />
+      </div>
     </div>
   );
 }

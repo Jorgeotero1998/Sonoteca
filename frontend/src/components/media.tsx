@@ -4,7 +4,6 @@ import { HeartIcon, PauseIcon, PlayIcon } from "./icons";
 import { useFavoritesStore } from "../store/favoritesStore";
 import { usePlayerStore, type Track } from "../store/playerStore";
 
-/* ---------------------------------------------------------------- helpers */
 export function useIsCurrent(ref?: string | null) {
   const cur = usePlayerStore((s) => s.queue[s.idx]?.ref);
   const isPlaying = usePlayerStore((s) => s.isPlaying);
@@ -20,7 +19,6 @@ export function fmtDuration(ms?: number | null) {
   return `${m}:${String(s).padStart(2, "0")}`;
 }
 
-/* ---------------------------------------------------------------- MediaCard */
 export function MediaCard({
   title,
   subtitle,
@@ -41,13 +39,14 @@ export function MediaCard({
   fallback?: ReactNode;
 }) {
   return (
-    <motion.div
-      className="mediaCard"
+    <motion.article
+      className="tile"
       onClick={onOpen}
       role={onOpen ? "button" : undefined}
       tabIndex={onOpen ? 0 : undefined}
-      whileHover={{ y: -6, transition: { duration: 0.2 } }}
-      whileTap={{ scale: 0.98 }}
+      whileHover={{ y: -8 }}
+      whileTap={{ scale: 0.97 }}
+      transition={{ type: "spring", stiffness: 420, damping: 28 }}
       onKeyDown={(e) => {
         if (onOpen && (e.key === "Enter" || e.key === " ")) {
           e.preventDefault();
@@ -55,48 +54,45 @@ export function MediaCard({
         }
       }}
     >
-      <div className={`mediaCard__art${round ? " round" : ""}`}>
+      <div className={`tile__art${round ? " tile__art--round" : ""}${playing ? " tile__art--playing" : ""}`}>
         {imageUrl ? (
           <img src={imageUrl} alt="" loading="lazy" />
         ) : fallback ? (
-          <div style={{ width: "100%", height: "100%", display: "grid", placeItems: "center", background: "linear-gradient(145deg, var(--surface-3), var(--surface))", color: "var(--muted)" }}>
-            {fallback}
-          </div>
+          <div className="tile__fallback">{fallback}</div>
         ) : (
           <div className="skeleton" style={{ width: "100%", height: "100%" }} />
         )}
         {onPlay ? (
           <motion.button
-            className="playFab"
+            className="tile__play"
             aria-label={playing ? "Pause" : `Play ${title}`}
-            whileHover={{ scale: 1.12 }}
-            whileTap={{ scale: 0.95 }}
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.92 }}
             onClick={(e) => {
               e.stopPropagation();
               onPlay();
             }}
           >
-            {playing ? <PauseIcon size={22} /> : <PlayIcon size={22} />}
+            {playing ? <PauseIcon size={20} /> : <PlayIcon size={20} />}
           </motion.button>
         ) : null}
       </div>
-      <div className="mediaCard__title truncate">{title}</div>
-      {subtitle ? <div className="mediaCard__sub truncate">{subtitle}</div> : null}
-    </motion.div>
+      <h3 className="tile__title truncate">{title}</h3>
+      {subtitle ? <p className="tile__sub truncate">{subtitle}</p> : null}
+    </motion.article>
   );
 }
 
 export function MediaCardSkeleton({ round }: { round?: boolean }) {
   return (
-    <div className="mediaCard" aria-hidden>
-      <div className={`mediaCard__art skeleton${round ? " round" : ""}`} />
-      <div className="skeleton skLine" style={{ width: "80%" }} />
-      <div className="skeleton skLine" style={{ width: "55%" }} />
+    <div className="tile" aria-hidden>
+      <div className={`tile__art skeleton${round ? " tile__art--round" : ""}`} />
+      <div className="skeleton skLine" style={{ width: "78%" }} />
+      <div className="skeleton skLine" style={{ width: "52%" }} />
     </div>
   );
 }
 
-/* ---------------------------------------------------------------- TrackRow */
 export function TrackRow({
   track,
   index,
@@ -116,13 +112,8 @@ export function TrackRow({
   const canFav = track.ref?.startsWith("deezer:");
 
   return (
-    <div className={`trackRow${isCurrent ? " playing" : ""}`} onDoubleClick={onPlay}>
-      <button
-        className="iconBtn ghost trackRow__idx"
-        style={{ width: 28, height: 28 }}
-        aria-label={isPlaying ? "Pause" : `Play ${track.title}`}
-        onClick={onPlay}
-      >
+    <div className={`songRow${isCurrent ? " songRow--active" : ""}`} onDoubleClick={onPlay}>
+      <button className="songRow__index" aria-label={isPlaying ? "Pause" : `Play ${track.title}`} onClick={onPlay}>
         {isPlaying ? (
           <span className="eq" aria-hidden>
             <span />
@@ -132,22 +123,20 @@ export function TrackRow({
         ) : isCurrent ? (
           <PlayIcon size={14} />
         ) : (
-          <>
-            <span className="trackRow__num">{index + 1}</span>
-          </>
+          <span className="songRow__num">{index + 1}</span>
         )}
       </button>
-      <div className="trackRow__art">
+      <div className="songRow__thumb">
         {track.cover_url ? <img src={track.cover_url} alt="" loading="lazy" /> : <div className="skeleton" style={{ width: "100%", height: "100%" }} />}
       </div>
-      <div className="truncate">
-        <div className="trackRow__title truncate">{track.title}</div>
-        <div className="muted truncate" style={{ fontSize: 13 }}>
+      <div className="songRow__info truncate">
+        <div className="songRow__title truncate">{track.title}</div>
+        <div className="songRow__artist truncate">
           {track.artist}
           {track.album ? ` · ${track.album}` : ""}
         </div>
       </div>
-      <div className="trackRow__actions">
+      <div className="songRow__end">
         {showFavorite && canFav ? (
           <button
             className={`iconBtn ghost${favHas ? " active" : ""}`}
@@ -158,36 +147,31 @@ export function TrackRow({
             <HeartIcon size={17} filled={favHas} />
           </button>
         ) : null}
-        {track.duration_ms ? (
-          <span className="muted2" style={{ fontSize: 13, fontVariantNumeric: "tabular-nums" }}>
-            {fmtDuration(track.duration_ms)}
-          </span>
-        ) : null}
+        {track.duration_ms ? <span className="songRow__dur">{fmtDuration(track.duration_ms)}</span> : null}
         {actions}
       </div>
     </div>
   );
 }
 
-/* ---------------------------------------------------------------- states */
 export function SectionHeader({ title, subtitle, action }: { title: string; subtitle?: string; action?: ReactNode }) {
   return (
-    <div className="sectionTitle">
-      <div>
-        <div className="h2">{title}</div>
-        {subtitle ? <div className="subtitle" style={{ marginTop: 4 }}>{subtitle}</div> : null}
+    <header className="sectionHead">
+      <div className="sectionHead__text">
+        <h2 className="sectionHead__title">{title}</h2>
+        {subtitle ? <p className="sectionHead__sub">{subtitle}</p> : null}
       </div>
-      {action ? <div className="sectionTitle__action">{action}</div> : null}
-    </div>
+      {action ? <div className="sectionHead__action">{action}</div> : null}
+    </header>
   );
 }
 
 export function EmptyState({ icon, title, hint, action }: { icon?: ReactNode; title: string; hint?: string; action?: ReactNode }) {
   return (
-    <div className="stateBox">
-      {icon ? <div className="stateBox__icon">{icon}</div> : null}
-      <div className="h2" style={{ color: "var(--text)" }}>{title}</div>
-      {hint ? <div className="muted" style={{ maxWidth: 380 }}>{hint}</div> : null}
+    <div className="emptyState">
+      {icon ? <div className="emptyState__icon">{icon}</div> : null}
+      <h3 className="emptyState__title">{title}</h3>
+      {hint ? <p className="emptyState__hint">{hint}</p> : null}
       {action}
     </div>
   );
@@ -195,7 +179,7 @@ export function EmptyState({ icon, title, hint, action }: { icon?: ReactNode; ti
 
 export function GridSkeleton({ count = 10, round }: { count?: number; round?: boolean }) {
   return (
-    <div className="grid">
+    <div className="tileGrid">
       {Array.from({ length: count }).map((_, i) => (
         <MediaCardSkeleton key={i} round={round} />
       ))}
@@ -205,16 +189,15 @@ export function GridSkeleton({ count = 10, round }: { count?: number; round?: bo
 
 export function RowSkeleton({ count = 8 }: { count?: number }) {
   return (
-    <div className="stack" style={{ gap: 2 }}>
+    <div className="songList">
       {Array.from({ length: count }).map((_, i) => (
-        <div key={i} className="trackRow" aria-hidden>
-          <div />
-          <div className="trackRow__art skeleton" />
+        <div key={i} className="songRow" aria-hidden>
+          <div className="songRow__index skeleton" style={{ width: 24, height: 24, borderRadius: 6 }} />
+          <div className="songRow__thumb skeleton" />
           <div style={{ width: "100%" }}>
-            <div className="skeleton skLine" style={{ width: "45%" }} />
-            <div className="skeleton skLine" style={{ width: "30%" }} />
+            <div className="skeleton skLine" style={{ width: "42%" }} />
+            <div className="skeleton skLine" style={{ width: "28%" }} />
           </div>
-          <div />
         </div>
       ))}
     </div>

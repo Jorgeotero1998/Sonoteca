@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { sonotecaApi } from "../../services/api/sonotecaApi";
 import { usePlayerStore, type Track } from "../../store/playerStore";
 import { EmptyState, RowSkeleton, SectionHeader, TrackRow } from "../../components/media";
+import { PageHero } from "../../components/PageHero";
 import { ClockIcon, HeartIcon, LibraryIcon, PlayIcon } from "../../components/icons";
 
 type Tab = "favorites" | "saved" | "history";
@@ -22,9 +23,9 @@ function toTrack(r: any): Track {
 }
 
 const META: Record<Tab, { title: string; subtitle: string; icon: React.ReactNode }> = {
-  favorites: { title: "Liked Songs", subtitle: "Tracks you’ve saved to favorites", icon: <HeartIcon size={26} filled /> },
-  saved: { title: "Saved", subtitle: "Everything you’ve added to your library", icon: <LibraryIcon size={26} /> },
-  history: { title: "Recently Played", subtitle: "Your listening history", icon: <ClockIcon size={26} /> },
+  favorites: { title: "Liked Songs", subtitle: "Tracks you've saved to favorites", icon: <HeartIcon size={32} filled /> },
+  saved: { title: "Saved", subtitle: "Everything you've added to your library", icon: <LibraryIcon size={32} /> },
+  history: { title: "Recently Played", subtitle: "Your listening history", icon: <ClockIcon size={32} /> },
 };
 
 export function LibraryPage() {
@@ -66,58 +67,56 @@ export function LibraryPage() {
   const meta = META[tab];
 
   return (
-    <div className="stack" style={{ gap: 8 }}>
-      <div className="hero">
-        <div className="hero__art" style={{ display: "grid", placeItems: "center", background: "linear-gradient(145deg, var(--acc), var(--acc-2))", color: "var(--acc-contrast)" }}>
-          {meta.icon}
-        </div>
-        <div className="hero__meta">
-          <div className="kicker">Your Library</div>
-          <div className="hero__title">{meta.title}</div>
-          <div className="muted">{meta.subtitle}</div>
-          <div className="row wrap gap2 mt3">
-            <button className="btnPrimary" onClick={() => setQueue(playable, 0)} disabled={!playable.length}>
-              <PlayIcon size={16} /> Play all
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <div className="tabs">
-        {(["favorites", "saved", "history"] as Tab[]).map((t) => (
-          <button key={t} className={`tab${tab === t ? " active" : ""}`} onClick={() => setTab(t)}>
-            {t === "favorites" ? "Liked" : t === "saved" ? "Saved" : "History"}
+    <div className="page page--flush">
+      <PageHero
+        type="Your Library"
+        title={meta.title}
+        subtitle={meta.subtitle}
+        fallback={meta.icon}
+        actions={
+          <button className="btn btn--primary" onClick={() => setQueue(playable, 0)} disabled={!playable.length}>
+            <PlayIcon size={16} /> Play all
           </button>
-        ))}
-      </div>
+        }
+      />
 
-      <SectionHeader title={meta.title} subtitle={busy ? "Loading…" : `${tracks.length} track${tracks.length === 1 ? "" : "s"}`} />
-
-      {busy ? (
-        <RowSkeleton count={8} />
-      ) : tracks.length === 0 ? (
-        <EmptyState
-          icon={meta.icon}
-          title={tab === "favorites" ? "No liked songs yet" : tab === "saved" ? "Your library is empty" : "Nothing played yet"}
-          hint={tab === "history" ? "Play a preview and it’ll show up here." : "Tap the heart on any track to save it here."}
-          action={
-            <button className="btn" onClick={() => nav("/search")}>
-              Find something to play
+      <div className="page__body">
+        <div className="segControl">
+          {(["favorites", "saved", "history"] as Tab[]).map((t) => (
+            <button key={t} className={`segControl__btn${tab === t ? " segControl__btn--active" : ""}`} onClick={() => setTab(t)}>
+              {t === "favorites" ? "Liked" : t === "saved" ? "Saved" : "History"}
             </button>
-          }
-        />
-      ) : (
-        <div className="stack" style={{ gap: 2 }}>
-          {tracks.map((t, i) => (
-            <TrackRow
-              key={`${t.ref}-${i}`}
-              track={t}
-              index={i}
-              onPlay={() => (t.preview_url ? playTrack(t) : window.open(t.external_urls?.deezer || `https://www.deezer.com/track/${t.ref.split(":")[1]}`, "_blank"))}
-            />
           ))}
         </div>
-      )}
+
+        <SectionHeader title={meta.title} subtitle={busy ? "Loading…" : `${tracks.length} track${tracks.length === 1 ? "" : "s"}`} />
+
+        {busy ? (
+          <RowSkeleton count={8} />
+        ) : tracks.length === 0 ? (
+          <EmptyState
+            icon={meta.icon}
+            title={tab === "favorites" ? "No liked songs yet" : tab === "saved" ? "Your library is empty" : "Nothing played yet"}
+            hint={tab === "history" ? "Play a preview and it'll show up here." : "Tap the heart on any track to save it here."}
+            action={
+              <button className="btn" onClick={() => nav("/search")}>
+                Find something to play
+              </button>
+            }
+          />
+        ) : (
+          <div className="songList">
+            {tracks.map((t, i) => (
+              <TrackRow
+                key={`${t.ref}-${i}`}
+                track={t}
+                index={i}
+                onPlay={() => (t.preview_url ? playTrack(t) : window.open(t.external_urls?.deezer || `https://www.deezer.com/track/${t.ref.split(":")[1]}`, "_blank"))}
+              />
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

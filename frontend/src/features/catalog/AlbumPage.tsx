@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { sonotecaApi } from "../../services/api/sonotecaApi";
 import { usePlayerStore, type Track } from "../../store/playerStore";
 import { EmptyState, RowSkeleton, SectionHeader, TrackRow } from "../../components/media";
+import { PageHero } from "../../components/PageHero";
 import { AlertIcon, ExternalIcon, PlayIcon } from "../../components/icons";
 
 function asTrack(x: any, cover?: string | null): Track {
@@ -59,22 +60,18 @@ export function AlbumPage() {
 
   if (err) return <EmptyState icon={<AlertIcon size={28} />} title="Album not found" hint="This album could not be loaded." action={<button className="btn" onClick={() => nav("/")}>Back home</button>} />;
 
+  const subtitle = [a?.artist, a?.release_date ? String(a.release_date).slice(0, 4) : null, a?.tracks?.length ? `${a.tracks.length} tracks` : null].filter(Boolean).join(" · ");
+
   return (
-    <div className="stack" style={{ gap: 8 }}>
-      <div className="hero">
-        <div className="hero__art">
-          {a?.cover_url ? <img src={a.cover_url} alt="" /> : <div className="skeleton" style={{ width: "100%", height: "100%" }} />}
-        </div>
-        <div className="hero__meta">
-          <div className="kicker">Album</div>
-          <div className="hero__title">{a?.title || "Loading…"}</div>
-          <div className="muted">
-            {a?.artist || ""}
-            {a?.release_date ? ` · ${String(a.release_date).slice(0, 4)}` : ""}
-            {a?.tracks?.length ? ` · ${a.tracks.length} tracks` : ""}
-          </div>
-          <div className="row wrap gap2 mt3">
-            <button className="btnPrimary" onClick={() => setQueue(playable, 0)} disabled={!playable.length}>
+    <div className="page page--flush">
+      <PageHero
+        type="Album"
+        title={a?.title || "Loading…"}
+        subtitle={subtitle}
+        imageUrl={a?.cover_url}
+        actions={
+          <>
+            <button className="btn btn--primary" onClick={() => setQueue(playable, 0)} disabled={!playable.length}>
               <PlayIcon size={16} /> Play
             </button>
             {a?.external_urls?.deezer ? (
@@ -82,27 +79,29 @@ export function AlbumPage() {
                 <ExternalIcon size={16} /> Deezer
               </a>
             ) : null}
-          </div>
-        </div>
-      </div>
+          </>
+        }
+      />
 
-      <SectionHeader title="Tracklist" subtitle={playable.length ? `${playable.length} playable previews` : undefined} />
-      {busy ? (
-        <RowSkeleton count={8} />
-      ) : allTracks.length === 0 ? (
-        <EmptyState title="No tracks available" />
-      ) : (
-        <div className="stack" style={{ gap: 2 }}>
-          {allTracks.map((t, i) => (
-            <TrackRow
-              key={t.ref}
-              track={t}
-              index={i}
-              onPlay={() => (t.preview_url ? playTrack(t) : window.open(t.external_urls?.deezer || `https://www.deezer.com/track/${t.ref.split(":")[1]}`, "_blank"))}
-            />
-          ))}
-        </div>
-      )}
+      <div className="page__body">
+        <SectionHeader title="Tracklist" subtitle={playable.length ? `${playable.length} playable previews` : undefined} />
+        {busy ? (
+          <RowSkeleton count={8} />
+        ) : allTracks.length === 0 ? (
+          <EmptyState title="No tracks available" />
+        ) : (
+          <div className="songList">
+            {allTracks.map((t, i) => (
+              <TrackRow
+                key={t.ref}
+                track={t}
+                index={i}
+                onPlay={() => (t.preview_url ? playTrack(t) : window.open(t.external_urls?.deezer || `https://www.deezer.com/track/${t.ref.split(":")[1]}`, "_blank"))}
+              />
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

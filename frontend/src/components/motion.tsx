@@ -127,7 +127,7 @@ export function NowPlayingSheet({
         <AudioVisualizer bars={32} height={56} />
 
         <div className="npSheet__controls">
-          <div className="player__seek">
+          <div className="playerDock__seek">
             <span className="time">{fmt(pos)}</span>
             <input
               className="range"
@@ -172,7 +172,7 @@ export function NowPlayingSheet({
 }
 
 /** Staggered grid container for album/track cards */
-export function MotionGrid({ children, className = "grid" }: { children: ReactNode; className?: string }) {
+export function MotionGrid({ children, className = "tileGrid" }: { children: ReactNode; className?: string }) {
   return (
     <motion.div
       className={className}
