@@ -26,7 +26,7 @@ https://github.com/user-attachments/assets/51e454f5-8d8f-4d50-aeeb-a0a1c5c7dd3a
 
 
 
-Production-grade music platform — real **Deezer API** catalog, 30s previews, JWT auth, RBAC, playlists, and listening history. Monorepo deployed as a single Vercel project (`/api` backend + React frontend). Refs-only persistence — no audio hosting.
+Full-stack music platform using the **Deezer API** for catalog browsing, 30s previews, JWT auth, RBAC, playlists, and listening history. Monorepo deployed as a single Vercel project (`/api` backend + React frontend). Refs-only persistence — no audio hosting.
 
 ```
 ┌─────────────┐     ┌──────────────────┐     ┌─────────────────────┐     ┌──────────────┐
