@@ -22,7 +22,7 @@ async def overview(
         select(func.count()).select_from(Song).where(Song.owner_id == user.id)
     )
     playlists_count = await db.execute(
-        select(func.count()).select_from(Playlist).where(Playlist.owner_id == user.id)
+        select(func.count()).select_from(Playlist).where(Playlist.user_id == user.id)
     )
 
     duration_sum = await db.execute(

@@ -196,6 +196,7 @@ async def reorder_items(
         raise HTTPException(status_code=400, detail="Must include all playlist items")
 
     for idx, item in enumerate(ordered, start=1):
+        assert item is not None
         item.position = idx
 
     await db.commit()

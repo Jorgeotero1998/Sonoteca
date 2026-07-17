@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import time
 from dataclasses import dataclass
+from inspect import isawaitable
 from typing import Any, Callable, Dict, Generic, Optional, TypeVar
 
 T = TypeVar("T")
@@ -34,7 +35,7 @@ class TTLCache:
         if v is not None:
             return v
         out = compute()
-        if hasattr(out, "__await__"):
-            out = await out  # type: ignore[no-untyped-call]
+        if isawaitable(out):
+            out = await out
         self.set(key, out, ttl_sec=ttl_sec)
         return out
